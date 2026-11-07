@@ -517,15 +517,17 @@ export default function HostAnnouncement({
                         <button
                             type="button"
                             onClick={() => setIsPollingActive(!isPollingActive)}
-                            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all ${isPollingActive
+                            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
+                                isPollingActive
                                     ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
                                     : 'bg-neutral-200 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
-                                }`}
+                            }`}
                             title="Click to pause or resume 5-second live polling"
                         >
                             <span
-                                className={`size-2 rounded-full ${isPollingActive ? 'bg-emerald-500 animate-pulse' : 'bg-neutral-400'
-                                    }`}
+                                className={`size-2 rounded-full ${
+                                    isPollingActive ? 'bg-emerald-500 animate-pulse' : 'bg-neutral-400'
+                                }`}
                             />
                             <span>{isPollingActive ? 'Live Polling: 5s' : 'Polling Paused'}</span>
                         </button>
@@ -652,22 +654,24 @@ export default function HostAnnouncement({
                                             <div
                                                 key={guest.id}
                                                 onClick={() => handleOpenForGuest(guest)}
-                                                className={`flex items-center justify-between gap-2.5 rounded-2xl border p-3 transition-all cursor-pointer ${isNextUp
+                                                className={`flex items-center justify-between gap-2.5 rounded-2xl border p-3 transition-all cursor-pointer ${
+                                                    isNextUp
                                                         ? 'border-primary/50 bg-primary/5 shadow-xs ring-2 ring-primary/20 dark:bg-primary/10'
                                                         : isAnnounced
-                                                            ? 'border-emerald-500/30 bg-emerald-500/5 opacity-80'
-                                                            : 'border-neutral-200 bg-neutral-50/60 dark:border-neutral-800 dark:bg-neutral-900/50 hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60'
-                                                    }`}
+                                                        ? 'border-emerald-500/30 bg-emerald-500/5 opacity-80'
+                                                        : 'border-neutral-200 bg-neutral-50/60 dark:border-neutral-800 dark:bg-neutral-900/50 hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60'
+                                                }`}
                                             >
                                                 <div className="flex items-center gap-2.5 min-w-0">
                                                     {/* Queue Order Number Badge */}
                                                     <span
-                                                        className={`inline-flex size-7 shrink-0 items-center justify-center rounded-xl text-xs font-mono font-black ${isNextUp
+                                                        className={`inline-flex size-7 shrink-0 items-center justify-center rounded-xl text-xs font-mono font-black ${
+                                                            isNextUp
                                                                 ? 'bg-primary text-primary-foreground shadow-xs animate-pulse'
                                                                 : isAnnounced
-                                                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                                                    : 'bg-neutral-200/80 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300'
-                                                            }`}
+                                                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                                                : 'bg-neutral-200/80 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300'
+                                                        }`}
                                                         title={`Queue Order #${globalIdx + 1}`}
                                                     >
                                                         #{globalIdx + 1}
