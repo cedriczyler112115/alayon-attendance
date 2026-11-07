@@ -39,7 +39,7 @@ class HostAnnouncementController extends Controller
         $attendeesQuery = Attendee::with(['category', 'province', 'city', 'barangay'])
             ->where('event_id', $event->id)
             ->when($selectedCategory, fn ($q, $cat) => $q->where('category_id', $cat))
-            ->when($status === 'pending', fn ($q) => $q->where('status', '!=', 'called'))
+            ->when($status === 'pending', fn ($q) => $q->where('status', 'registered'))
             ->when($status === 'announced', fn ($q) => $q->where('status', 'called'))
             ->when($search, function ($q, $term) {
                 $q->where(function ($sq) use ($term) {
@@ -70,7 +70,7 @@ class HostAnnouncementController extends Controller
         $allEventAttendees = Attendee::where('event_id', $event->id)->get(['id', 'category_id', 'status']);
         $totalRegistered = $allEventAttendees->count();
         $totalAnnounced = $allEventAttendees->where('status', 'called')->count();
-        $totalPending = $allEventAttendees->where('status', '!=', 'called')->count();
+        $totalPending = $allEventAttendees->where('status', 'registered')->count();
 
         $categoryStats = $categories->map(function ($cat) use ($allEventAttendees) {
             $catAttendees = $allEventAttendees->where('category_id', $cat->id);
@@ -82,7 +82,7 @@ class HostAnnouncementController extends Controller
                 'scope' => $cat->scope,
                 'total' => $catAttendees->count(),
                 'announced' => $catAttendees->where('status', 'called')->count(),
-                'pending' => $catAttendees->where('status', '!=', 'called')->count(),
+                'pending' => $catAttendees->where('status', 'registered')->count(),
             ];
         });
 
@@ -115,6 +115,10 @@ class HostAnnouncementController extends Controller
      */
     public function announce(Request $request, Attendee $attendee): RedirectResponse
     {
+        if ($attendee->status !== 'registered') {
+            return back()->with('error', "Cannot call attendee \"{$attendee->name}\": only guests with registered status can be called.");
+        }
+
         $attendee->update([
             'status' => 'called',
         ]);
@@ -234,7 +238,7 @@ class HostAnnouncementController extends Controller
         if ($sinceId) {
             $newAttendees = (clone $query)
                 ->where('attendees.id', '>', (int) $sinceId)
-                ->where('attendees.status', '!=', 'called')
+                ->where('attendees.status', 'registered')
                 ->leftJoin('guest_categories', 'attendees.category_id', '=', 'guest_categories.id')
                 ->select('attendees.*')
                 ->orderBy('guest_categories.order', 'asc')
@@ -259,7 +263,7 @@ class HostAnnouncementController extends Controller
         $stats = [
             'total' => $allAttendees->count(),
             'announced' => $allAttendees->where('status', 'called')->count(),
-            'pending' => $allAttendees->where('status', '!=', 'called')->count(),
+            'pending' => $allAttendees->where('status', 'registered')->count(),
         ];
 
         return response()->json([

@@ -61,7 +61,7 @@ class Attendee extends Model
      * @var array<string, mixed>
      */
     protected $attributes = [
-        'status' => 'registered',
+        'status' => 'invited',
         'is_attending' => false,
     ];
 
@@ -84,7 +84,7 @@ class Attendee extends Model
     {
         static::creating(function (Attendee $attendee) {
             if (empty($attendee->status)) {
-                $attendee->status = 'registered';
+                $attendee->status = 'invited';
             }
 
             if (empty($attendee->created_by) && auth()->check()) {

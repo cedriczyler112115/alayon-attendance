@@ -435,13 +435,13 @@ export default function AttendanceIndex({
                                                                 <Check className="size-3" />
                                                                 <span>Called</span>
                                                             </Badge>
-                                                        ) : attendee.status === 'registered' ? (
-                                                            <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 font-semibold text-xs">
-                                                                Registered
-                                                            </Badge>
-                                                        ) : (
+                                                        ) : attendee.status === 'invited' ? (
                                                             <Badge variant="outline" className="border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300 font-semibold text-xs">
                                                                 Invited
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 font-semibold text-xs">
+                                                                Registered
                                                             </Badge>
                                                         )}
                                                     </td>
@@ -550,11 +550,15 @@ export default function AttendanceIndex({
                                                     </span>
                                                 )}
 
-                                                {/* Status Badge: Already Called / Registered */}
+                                                {/* Status Badge: Already Called / Invited / Registered */}
                                                 {isAlreadyAnnounced ? (
                                                     <Badge className="bg-emerald-600 text-white font-bold gap-1 text-xs">
                                                         <CheckCircle2 className="size-3.5" />
                                                         <span>Already Called</span>
+                                                    </Badge>
+                                                ) : attendee.status === 'invited' ? (
+                                                    <Badge variant="outline" className="border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300 font-semibold text-xs">
+                                                        Invited
                                                     </Badge>
                                                 ) : (
                                                     <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 font-semibold text-xs">

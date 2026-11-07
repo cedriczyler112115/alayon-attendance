@@ -143,6 +143,25 @@ test('when the host announces a guest it is tagged as called', function () {
         ->and($attendee->is_announced)->toBeTrue();
 });
 
+test('host cannot announce an attendee with invited status', function () {
+    $invitedAttendee = Attendee::create([
+        'event_id' => $this->event->id,
+        'category_id' => $this->govCategory->id,
+        'prefix_name' => 'Gov.',
+        'fullname' => 'Invited Governor',
+        'position' => 'Provincial Governor',
+        'status' => 'invited',
+        'created_at' => now(),
+    ]);
+
+    $response = $this->actingAs($this->host)->post(route('attendees.announce', $invitedAttendee));
+    $response->assertSessionHas('error');
+
+    $invitedAttendee->refresh();
+    expect($invitedAttendee->status)->toBe('invited')
+        ->and($invitedAttendee->is_announced)->toBeFalse();
+});
+
 test('host can unannounce a guest if clicked mistakenly', function () {
     $attendee = Attendee::create([
         'event_id' => $this->event->id,

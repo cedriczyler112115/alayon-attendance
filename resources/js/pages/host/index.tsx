@@ -162,8 +162,11 @@ export default function HostAnnouncement({
         saveHostAnnouncerSettings(newSettings);
     };
 
-    // Unified helper to open the popup modal for any guest
+    // Unified helper to open the popup modal for any guest (strictly registered guests only)
     const openModalForGuest = (guest: Attendee, isLiveArrival: boolean = false) => {
+        if (guest.status !== 'registered') {
+            return;
+        }
         setDismissedGuestId(null);
         setModalGuest(guest);
         setCurrentGuestId(guest.id);
@@ -210,14 +213,14 @@ export default function HostAnnouncement({
 
                 const incomingAttendees: Attendee[] = Array.isArray(data.attendees) ? data.attendees : [];
 
-                // Detect newly arrived guests: any incoming guest with status !== 'called' whose ID was NOT seen yet
+                // Detect newly arrived guests: any incoming guest with status === 'registered' whose ID was NOT seen yet
                 const brandNewAttendees: Attendee[] = incomingAttendees.filter(
-                    (a: Attendee) => a.status !== 'called' && !seenAttendeeIdsRef.current.has(a.id)
+                    (a: Attendee) => a.status === 'registered' && !seenAttendeeIdsRef.current.has(a.id)
                 );
 
                 // Also check data.new_attendees from server
                 const serverNewAttendees: Attendee[] = Array.isArray(data.new_attendees)
-                    ? data.new_attendees.filter((a: Attendee) => a.status !== 'called')
+                    ? data.new_attendees.filter((a: Attendee) => a.status === 'registered')
                     : [];
 
                 // Combine and deduplicate
@@ -257,11 +260,11 @@ export default function HostAnnouncement({
 
                 // STRICTLY SORT ALL ATTENDEES ACCORDING TO CURRENT SORTING SELECTION & PROTOCOL CATEGORY SEQUENCE!
                 const sortedQueue = sortAndFilterAttendees(fullList, currentSettings, currentSearch, currentCats);
-                const uncalledSorted = sortedQueue.filter((a: Attendee) => a.status !== 'called');
+                const uncalledSorted = sortedQueue.filter((a: Attendee) => a.status === 'registered');
 
-                // If newly arrived guests detected: alert and chime ONLY if allowed to call in popup modal
+                // If newly arrived guests detected: alert and chime ONLY if registered and allowed to call in popup modal
                 const allowedNewRegistrations = allNewRegistrations.filter((a: Attendee) =>
-                    isCategoryAllowedToCall(a, currentCats)
+                    a.status === 'registered' && isCategoryAllowedToCall(a, currentCats)
                 );
 
                 if (allowedNewRegistrations.length > 0) {
@@ -292,15 +295,15 @@ export default function HostAnnouncement({
     }, [event.id, isPollingActive, settings.pollingInterval]);
 
     // Filter and sort the attendees queue based on current settings and protocol category sequence.
-    // Strictly displays only guests from categories allowed to call in the Announcement Queue Sequence.
+    // Strictly displays only guests from categories allowed to call and with registered status in the Announcement Queue Sequence.
     const queue = useMemo(() => {
         const sorted = sortAndFilterAttendees(attendees, settings, searchQuery, categories);
-        return sorted.filter((a) => isCategoryAllowedToCall(a, categories));
+        return sorted.filter((a) => a.status === 'registered' && isCategoryAllowedToCall(a, categories));
     }, [attendees, settings, searchQuery, categories]);
 
     // Unannounced (pending) attendees in the queue
     const pendingInQueue = useMemo(() => {
-        return queue.filter((a) => a.status !== 'called');
+        return queue.filter((a) => a.status === 'registered');
     }, [queue]);
 
     // Current guest being displayed in the modal (fallback to lookup if modalGuest is not directly set)
@@ -318,23 +321,23 @@ export default function HostAnnouncement({
 
     // Next guest in queue ready to be called via popup modal
     const nextUpGuest = useMemo(() => {
-        return queue.find((a) => a.status !== 'called') || queue[0] || null;
+        return queue.find((a) => a.status === 'registered') || queue[0] || null;
     }, [queue]);
 
     // Automatic Pop-Up:
-    // Whenever there is an entry in the Announcement Queue Sequence list that is allowed to call, automatically popup the modal so that it will be called by the host.
+    // Whenever there is an entry in the Announcement Queue Sequence list that is allowed to call and registered, automatically popup the modal so that it will be called by the host.
     useEffect(() => {
         if (isModalOpen || isAdvancingRef.current) return;
         if (!settings.autoPopupNewRegistrations) return;
 
-        const nextPending = queue.find((a) => a.status !== 'called');
+        const nextPending = queue.find((a) => a.status === 'registered');
         if (nextPending && nextPending.id !== dismissedGuestId) {
             openModalForGuest(nextPending, false);
         }
     }, [queue, isModalOpen, settings.autoPopupNewRegistrations, dismissedGuestId]);
 
-    // Live pending count of guests allowed to call
-    const pendingCount = attendees.filter((a) => a.status !== 'called' && isCategoryAllowedToCall(a, categories)).length;
+    // Live pending count of registered guests allowed to call
+    const pendingCount = attendees.filter((a) => a.status === 'registered' && isCategoryAllowedToCall(a, categories)).length;
 
     // All called guests sorted by announcement recency
     const allCalledGuests = useMemo(() => {
@@ -400,15 +403,21 @@ export default function HostAnnouncement({
     // Start / Open Announcer Modal from the next up guest in call queue
     const handleStartAnnouncing = () => {
         const target = nextUpGuest || queue[0];
-        if (target) {
+        if (target && target.status === 'registered') {
             openModalForGuest(target, false);
         } else {
-            toast.info('No guests from categories allowed to call in popup modal.');
+            toast.info('No registered guests from categories allowed to call in popup modal.');
         }
     };
 
     // Open Announcer Modal for a specific guest
     const handleOpenForGuest = (guest: Attendee) => {
+        if (guest.status !== 'registered') {
+            toast.warning(
+                `Guest "${guest.fullname || guest.name}" is currently "${guest.status}". Only guests with registered status can be called.`
+            );
+            return;
+        }
         if (!isCategoryAllowedToCall(guest, categories)) {
             toast.warning(
                 `Category "${guest.category?.name || 'Guest'}" is not allowed to call in popup modal (configured in Protocol Priority Settings).`
@@ -423,9 +432,9 @@ export default function HostAnnouncement({
     const handleAnnounceAndNext = (guest: Attendee) => {
         isAdvancingRef.current = true;
 
-        // 1. Determine the next candidate in sequence among allowed-to-call categories BEFORE mutating state
+        // 1. Determine the next candidate in sequence among registered and allowed-to-call categories BEFORE mutating state
         const currentUncalled = sortAndFilterAttendees(
-            attendees.filter((a) => a.status !== 'called' && isCategoryAllowedToCall(a, categories)),
+            attendees.filter((a) => a.status === 'registered' && isCategoryAllowedToCall(a, categories)),
             settings,
             searchQuery,
             categories
@@ -508,17 +517,15 @@ export default function HostAnnouncement({
                         <button
                             type="button"
                             onClick={() => setIsPollingActive(!isPollingActive)}
-                            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
-                                isPollingActive
+                            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all ${isPollingActive
                                     ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
                                     : 'bg-neutral-200 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
-                            }`}
+                                }`}
                             title="Click to pause or resume 5-second live polling"
                         >
                             <span
-                                className={`size-2 rounded-full ${
-                                    isPollingActive ? 'bg-emerald-500 animate-pulse' : 'bg-neutral-400'
-                                }`}
+                                className={`size-2 rounded-full ${isPollingActive ? 'bg-emerald-500 animate-pulse' : 'bg-neutral-400'
+                                    }`}
                             />
                             <span>{isPollingActive ? 'Live Polling: 5s' : 'Polling Paused'}</span>
                         </button>
@@ -603,7 +610,7 @@ export default function HostAnnouncement({
                                     </Badge>
                                 </CardTitle>
                                 <CardDescription className="text-xs">
-                                    Guests are strictly ordered according to Category Protocol Priority sequence. Only categories allowed to call are included in this queue.
+                                    Guests are strictly ordered according to Category Protocol Priority sequence. Only registered guests allowed to call are included in this queue.
                                 </CardDescription>
                             </div>
 
@@ -625,12 +632,12 @@ export default function HostAnnouncement({
                             <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
                                 <Users className="size-12 opacity-30" />
                                 <h3 className="mt-3 text-base font-bold text-neutral-800 dark:text-neutral-200">
-                                    No pending guests in this queue view
+                                    No registered guests in this queue view
                                 </h3>
                                 <p className="text-xs mt-1 max-w-sm">
                                     {searchQuery
-                                        ? `No pending guests match "${searchQuery}". Clear the search query to see the full queue.`
-                                        : 'All registered guests have been called! You can view and manage called guests in the section below.'}
+                                        ? `No registered guests match "${searchQuery}". Clear the search query to see the full queue.`
+                                        : 'All registered guests have been called or no guests are currently registered. Guests with "invited" status will appear here once tagged as attended.'}
                                 </p>
                             </div>
                         ) : (
@@ -645,24 +652,22 @@ export default function HostAnnouncement({
                                             <div
                                                 key={guest.id}
                                                 onClick={() => handleOpenForGuest(guest)}
-                                                className={`flex items-center justify-between gap-2.5 rounded-2xl border p-3 transition-all cursor-pointer ${
-                                                    isNextUp
+                                                className={`flex items-center justify-between gap-2.5 rounded-2xl border p-3 transition-all cursor-pointer ${isNextUp
                                                         ? 'border-primary/50 bg-primary/5 shadow-xs ring-2 ring-primary/20 dark:bg-primary/10'
                                                         : isAnnounced
-                                                        ? 'border-emerald-500/30 bg-emerald-500/5 opacity-80'
-                                                        : 'border-neutral-200 bg-neutral-50/60 dark:border-neutral-800 dark:bg-neutral-900/50 hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60'
-                                                }`}
+                                                            ? 'border-emerald-500/30 bg-emerald-500/5 opacity-80'
+                                                            : 'border-neutral-200 bg-neutral-50/60 dark:border-neutral-800 dark:bg-neutral-900/50 hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60'
+                                                    }`}
                                             >
                                                 <div className="flex items-center gap-2.5 min-w-0">
                                                     {/* Queue Order Number Badge */}
                                                     <span
-                                                        className={`inline-flex size-7 shrink-0 items-center justify-center rounded-xl text-xs font-mono font-black ${
-                                                            isNextUp
+                                                        className={`inline-flex size-7 shrink-0 items-center justify-center rounded-xl text-xs font-mono font-black ${isNextUp
                                                                 ? 'bg-primary text-primary-foreground shadow-xs animate-pulse'
                                                                 : isAnnounced
-                                                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                                                : 'bg-neutral-200/80 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300'
-                                                        }`}
+                                                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                                                    : 'bg-neutral-200/80 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300'
+                                                            }`}
                                                         title={`Queue Order #${globalIdx + 1}`}
                                                     >
                                                         #{globalIdx + 1}

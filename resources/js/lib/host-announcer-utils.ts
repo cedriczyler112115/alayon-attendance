@@ -392,7 +392,7 @@ export function sortAndFilterAttendees(
 
     // Filter by Announcement Status
     if (settings.statusFilter === 'pending') {
-        result = result.filter((a) => a.status !== 'called');
+        result = result.filter((a) => a.status === 'registered');
     } else if (settings.statusFilter === 'called') {
         result = result.filter((a) => a.status === 'called');
     }

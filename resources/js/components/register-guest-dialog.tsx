@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { MapPin, Save, UserPlus, Users } from 'lucide-react';
+import { MapPin, Save, UserCheck, UserPlus, Users, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import InputError from '@/components/input-error';
@@ -386,34 +386,46 @@ export function RegisterGuestDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
-                className="max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6"
+                className="w-[calc(100vw-1.5rem)] sm:w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-3.5 sm:p-6"
                 onPointerDownOutside={(e) => e.preventDefault()}
                 onInteractOutside={(e) => e.preventDefault()}
                 hideCloseButton={true}
             >
-                <DialogHeader className="pb-2 border-b border-neutral-100 dark:border-neutral-800">
-                    <div className="flex items-center gap-2.5">
-                        <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
-                            <UserPlus className="size-4" />
-                        </div>
-                        <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                                <DialogTitle className="text-base sm:text-lg font-bold">
-                                    Register Guest Attendance
-                                </DialogTitle>
-                                <Badge variant="outline" className="border-primary/30 text-primary text-[10px] font-semibold">
-                                    Region 16 (Caraga)
-                                </Badge>
-                                {currentEvent && (
-                                    <Badge variant="secondary" className="hidden text-[10px] font-normal sm:inline-flex">
-                                        Event: <strong className="ml-1 font-semibold">{currentEvent.title}</strong>
-                                    </Badge>
-                                )}
+                <DialogHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800">
+                    <div className="flex items-start justify-between gap-2.5 sm:gap-3">
+                        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 dark:bg-primary/20 dark:border-primary/30 shadow-2xs">
+                                <UserPlus className="size-4.5 sm:size-5" />
                             </div>
-                            <DialogDescription className="text-xs">
-                                Simple registration for arriving guests, officials, and regional dignitaries
-                            </DialogDescription>
+                            <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                    <DialogTitle className="text-sm sm:text-base md:text-lg font-bold tracking-tight text-neutral-900 dark:text-white">
+                                        Register Guest Attendance
+                                    </DialogTitle>
+                                    <Badge variant="outline" className="border-primary/30 text-primary text-[10px] font-semibold shrink-0">
+                                        Region 16
+                                    </Badge>
+                                    {currentEvent && (
+                                        <Badge variant="secondary" className="hidden md:inline-flex text-[10px] font-medium text-muted-foreground">
+                                            Event: <strong className="ml-1 font-semibold text-neutral-800 dark:text-neutral-200">{currentEvent.title}</strong>
+                                        </Badge>
+                                    )}
+                                </div>
+                                <DialogDescription className="text-xs text-muted-foreground mt-0.5 truncate">
+                                    Register arriving guest or official
+                                </DialogDescription>
+                            </div>
                         </div>
+
+                        <button
+                            type="button"
+                            onClick={() => onOpenChange(false)}
+                            className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-neutral-200/60 bg-neutral-50/50 text-neutral-400 hover:border-neutral-300 hover:bg-neutral-100 hover:text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-white transition-all shadow-2xs"
+                            title="Close modal (Esc)"
+                            aria-label="Close modal"
+                        >
+                            <X className="size-4" />
+                        </button>
                     </div>
                 </DialogHeader>
 
@@ -778,8 +790,8 @@ export function RegisterGuestDialog({
                             className="gap-1.5 font-semibold shadow-xs"
                         >
                             {processing && <Spinner className="size-3.5" />}
-                            <Save className="size-3.5" />
-                            <span>Save Guest Attendance</span>
+                            <UserCheck className="size-3.5" />
+                            <span>Tagged as Attended</span>
                         </Button>
                     </DialogFooter>
                 </form>

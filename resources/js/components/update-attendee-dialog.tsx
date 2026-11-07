@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { MapPin, Pencil, Save, Users } from 'lucide-react';
+import { MapPin, Pencil, Save, UserCheck, Users, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import InputError from '@/components/input-error';
@@ -374,27 +374,51 @@ export function UpdateAttendeeDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
-                className="max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6"
+                className="w-[calc(100vw-1.5rem)] sm:w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-3.5 sm:p-6"
                 onPointerDownOutside={(e) => e.preventDefault()}
                 onInteractOutside={(e) => e.preventDefault()}
                 hideCloseButton={true}
             >
-                <DialogHeader className="pb-2 border-b border-neutral-100 dark:border-neutral-800">
-                    <div className="flex items-center gap-2.5">
-                        <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20">
-                            <Pencil className="size-4" />
+                <DialogHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800">
+                    <div className="flex items-start justify-between gap-2.5 sm:gap-3">
+                        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 dark:bg-primary/20 dark:border-primary/30 shadow-2xs">
+                                <Pencil className="size-4.5 sm:size-5" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                    <DialogTitle className="text-sm sm:text-base md:text-lg font-bold tracking-tight text-neutral-900 dark:text-white">
+                                        Update Attendee Record
+                                    </DialogTitle>
+                                    {attendee && (
+                                        <Badge variant="outline" className="font-mono text-[10px] font-bold text-neutral-500 shrink-0">
+                                            #{attendee.id}
+                                        </Badge>
+                                    )}
+                                    {attendee?.category?.name && (
+                                        <Badge variant="outline" className="text-[10px] font-semibold border-primary/30 text-primary shrink-0">
+                                            {attendee.category.name}
+                                        </Badge>
+                                    )}
+                                </div>
+                                <DialogDescription className="text-xs text-muted-foreground mt-0.5 truncate">
+                                    Edit details for{' '}
+                                    <strong className="font-semibold text-neutral-900 dark:text-white">
+                                        {attendee?.fullname}
+                                    </strong>
+                                </DialogDescription>
+                            </div>
                         </div>
-                        <div>
-                            <DialogTitle className="text-base sm:text-lg font-bold">
-                                Update Attendee Record
-                            </DialogTitle>
-                            <DialogDescription className="text-xs">
-                                Edit details, attendance confirmation, or jurisdiction for{' '}
-                                <strong className="font-semibold text-neutral-900 dark:text-white">
-                                    {attendee?.fullname}
-                                </strong>
-                            </DialogDescription>
-                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => onOpenChange(false)}
+                            className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-neutral-200/60 bg-neutral-50/50 text-neutral-400 hover:border-neutral-300 hover:bg-neutral-100 hover:text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-white transition-all shadow-2xs"
+                            title="Close modal (Esc)"
+                            aria-label="Close modal"
+                        >
+                            <X className="size-4" />
+                        </button>
                     </div>
                 </DialogHeader>
 
@@ -741,8 +765,8 @@ export function UpdateAttendeeDialog({
                             className="gap-1.5 font-semibold shadow-xs"
                         >
                             {processing && <Spinner className="size-3.5" />}
-                            <Save className="size-3.5" />
-                            <span>Save Changes</span>
+                            <UserCheck className="size-3.5" />
+                            <span>Tagged as Attended</span>
                         </Button>
                     </DialogFooter>
                 </form>
