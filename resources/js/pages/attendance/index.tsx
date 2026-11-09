@@ -13,6 +13,7 @@ import {
     Megaphone,
     Pencil,
     Plus,
+    Printer,
     RotateCcw,
     Search,
     Trash2,
@@ -25,9 +26,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { Select2 } from '@/components/ui/select2';
 import { RegisterGuestDialog } from '@/components/register-guest-dialog';
 import { UpdateAttendeeDialog } from '@/components/update-attendee-dialog';
+import { PrintAttendeesDialog } from '@/components/print-attendees-dialog';
 import { getCategoryCustomField } from '@/lib/category-custom-fields';
 import {
     getAttendeePositionWithJurisdiction,
@@ -70,9 +73,13 @@ type Props = {
     filters: {
         event_id?: string | number;
         category_id?: string | number;
+        category_ids?: string;
         status?: string;
         search?: string;
         per_page?: string | number;
+        attendance_mode?: string;
+        province_id?: string | number;
+        city_id?: string | number;
     };
 };
 
@@ -88,6 +95,7 @@ export default function AttendanceIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [isRegistering, setIsRegistering] = useState(false);
     const [editingAttendee, setEditingAttendee] = useState<Attendee | null>(null);
+    const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
     const handleFilterChange = (key: string, value: string) => {
         const newFilters: Record<string, any> = {
@@ -95,6 +103,9 @@ export default function AttendanceIndex({
             [key]: value || undefined,
             page: 1,
         };
+        if (key === 'category_ids') {
+            delete newFilters.category_id;
+        }
         if (!value) {
             delete newFilters[key];
         }
@@ -152,6 +163,15 @@ export default function AttendanceIndex({
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-1.5 font-semibold text-neutral-800 dark:text-neutral-200 shadow-xs hover:border-primary/50"
+                                onClick={() => setIsPrintModalOpen(true)}
+                            >
+                                <Printer className="size-4 text-primary" />
+                                <span>Print</span>
+                            </Button>
                             {currentEvent && (
                                 <Button
                                     size="sm"
@@ -173,24 +193,46 @@ export default function AttendanceIndex({
 
                     {/* Integrated Filters Toolbar */}
                     <div className="border-b border-neutral-200/80 bg-neutral-50/50 p-4 dark:border-neutral-800 dark:bg-neutral-900/30">
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            {/* Category Select */}
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                            {/* Category Multi-Select */}
                             <div>
-                                <label className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">Category</label>
-                                <Select2
-                                    value={filters.category_id || ''}
-                                    onChange={(val) => handleFilterChange('category_id', String(val))}
-                                    options={[
-                                        { value: '', label: 'All Categories' },
-                                        ...categories.map((cat) => ({
-                                            value: cat.id,
-                                            label: cat.name,
-                                            badge: cat.scope,
-                                        })),
-                                    ]}
+                                <label className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">Categories</label>
+                                <MultiSelect
+                                    value={
+                                        filters.category_ids
+                                            ? String(filters.category_ids).split(',').filter(Boolean)
+                                            : filters.category_id
+                                              ? [filters.category_id]
+                                              : []
+                                    }
+                                    onChange={(vals) => handleFilterChange('category_ids', vals.join(','))}
+                                    options={categories.map((cat) => ({
+                                        value: cat.id,
+                                        label: cat.name,
+                                        badge: cat.scope,
+                                    }))}
                                     placeholder="All Categories"
-                                    searchPlaceholder="Search category..."
-                                    clearable={Boolean(filters.category_id)}
+                                    searchPlaceholder="Search categories..."
+                                    allLabel="All Categories"
+                                    maxDisplayBadges={1}
+                                    className="mt-1"
+                                />
+                            </div>
+
+                            {/* Attendance / Representative Confirmation */}
+                            <div>
+                                <label className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">Attendance / Rep</label>
+                                <Select2
+                                    value={filters.attendance_mode || ''}
+                                    onChange={(val) => handleFilterChange('attendance_mode', String(val))}
+                                    options={[
+                                        { value: '', label: 'All (With & Without Rep)' },
+                                        { value: 'without_rep', label: 'In Person (Without Rep)' },
+                                        { value: 'with_rep', label: 'Via Representative' },
+                                    ]}
+                                    placeholder="All Attendance Modes"
+                                    searchPlaceholder="Filter mode..."
+                                    clearable={Boolean(filters.attendance_mode)}
                                     className="mt-1"
                                 />
                             </div>
@@ -754,6 +796,18 @@ export default function AttendanceIndex({
                     cities={cities}
                     events={events}
                     currentEvent={currentEvent}
+                />
+
+                {/* Print Attendees Registry Modal */}
+                <PrintAttendeesDialog
+                    open={isPrintModalOpen}
+                    onOpenChange={setIsPrintModalOpen}
+                    events={events}
+                    currentEvent={currentEvent}
+                    categories={categories}
+                    provinces={provinces}
+                    cities={cities}
+                    initialFilters={filters}
                 />
             </div>
         </>

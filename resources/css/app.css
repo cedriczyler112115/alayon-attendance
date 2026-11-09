@@ -141,3 +141,40 @@
         @apply bg-background text-foreground;
     }
 }
+
+@media print {
+    @page {
+        size: auto;
+        margin: 10mm 8mm 10mm 8mm;
+    }
+
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    [data-slot="dialog-overlay"],
+    [data-slot="sidebar"] {
+        display: none !important;
+    }
+
+    .break-inside-avoid,
+    tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    thead {
+        display: table-header-group !important;
+    }
+
+    tfoot {
+        display: table-footer-group !important;
+    }
+}

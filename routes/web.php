@@ -11,7 +11,22 @@ use App\Models\GuestCategory;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::inertia('/', 'welcome')->name('home');
+Route::get('/', function () {
+    $activeEvent = Event::where('status', 'active')->latest()->first() ?? Event::first();
+
+    $categoriesCount = GuestCategory::where('is_active', true)->count();
+    $totalRegistered = $activeEvent ? Attendee::where('event_id', $activeEvent->id)->count() : Attendee::count();
+    $totalAnnounced = $activeEvent ? Attendee::where('event_id', $activeEvent->id)->where('status', 'called')->count() : Attendee::where('status', 'called')->count();
+
+    return Inertia::render('welcome', [
+        'activeEvent' => $activeEvent,
+        'stats' => [
+            'total_registered' => $totalRegistered,
+            'total_announced' => $totalAnnounced,
+            'categories_count' => $categoriesCount,
+        ],
+    ]);
+})->name('home');
 
 // Attendance Registration Routes (Kiosk removed; redirect to attendees registry)
 Route::redirect('attendance', '/attendees')->name('attendance.create');
@@ -60,27 +75,33 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('dashboard');
 
-    // Host Event Announcement Console
-    Route::get('host', [HostAnnouncementController::class, 'index'])->name('host.index');
-    Route::get('events/{event}/host', [HostAnnouncementController::class, 'index'])->name('events.host');
-    Route::post('attendees/{attendee}/announce', [HostAnnouncementController::class, 'announce'])->name('attendees.announce');
-    Route::post('attendees/{attendee}/unannounce', [HostAnnouncementController::class, 'unannounce'])->name('attendees.unannounce');
+    // Host Event Announcement Console (Host and Admin)
+    Route::middleware(['role:host,admin'])->group(function () {
+        Route::get('host', [HostAnnouncementController::class, 'index'])->name('host.index');
+        Route::get('events/{event}/host', [HostAnnouncementController::class, 'index'])->name('events.host');
+        Route::post('attendees/{attendee}/announce', [HostAnnouncementController::class, 'announce'])->name('attendees.announce');
+        Route::post('attendees/{attendee}/unannounce', [HostAnnouncementController::class, 'unannounce'])->name('attendees.unannounce');
+    });
 
-    // Full Attendees List & Management
-    Route::get('attendees', [AttendanceController::class, 'index'])->name('attendees.index');
-    Route::put('attendees/{attendee}', [AttendanceController::class, 'update'])->name('attendees.update');
-    Route::delete('attendees/{attendee}', [AttendanceController::class, 'destroy'])->name('attendees.destroy');
+    // Attendance Registry & Attendee Management (Staff and Admin)
+    Route::middleware(['role:staff,admin'])->group(function () {
+        Route::get('attendees', [AttendanceController::class, 'index'])->name('attendees.index');
+        Route::get('attendees/print-data', [AttendanceController::class, 'printData'])->name('attendees.print-data');
+        Route::put('attendees/{attendee}', [AttendanceController::class, 'update'])->name('attendees.update');
+        Route::delete('attendees/{attendee}', [AttendanceController::class, 'destroy'])->name('attendees.destroy');
+    });
 
-    // Dynamic Categories Management
-    Route::get('categories', [GuestCategoryController::class, 'index'])->name('categories.index');
-    Route::post('categories', [GuestCategoryController::class, 'store'])->name('categories.store');
-    Route::put('categories/{category}', [GuestCategoryController::class, 'update'])->name('categories.update');
-    Route::delete('categories/{category}', [GuestCategoryController::class, 'destroy'])->name('categories.destroy');
+    // Dynamic Categories & Events Management (Admin Only)
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('categories', [GuestCategoryController::class, 'index'])->name('categories.index');
+        Route::post('categories', [GuestCategoryController::class, 'store'])->name('categories.store');
+        Route::put('categories/{category}', [GuestCategoryController::class, 'update'])->name('categories.update');
+        Route::delete('categories/{category}', [GuestCategoryController::class, 'destroy'])->name('categories.destroy');
 
-    // Events Management
-    Route::get('events', [EventController::class, 'index'])->name('events.index');
-    Route::post('events', [EventController::class, 'store'])->name('events.store');
-    Route::put('events/{event}', [EventController::class, 'update'])->name('events.update');
+        Route::get('events', [EventController::class, 'index'])->name('events.index');
+        Route::post('events', [EventController::class, 'store'])->name('events.store');
+        Route::put('events/{event}', [EventController::class, 'update'])->name('events.update');
+    });
 });
 
 require __DIR__.'/settings.php';

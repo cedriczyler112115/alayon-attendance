@@ -7,6 +7,7 @@ use App\Models\City;
 use App\Models\Event;
 use App\Models\GuestCategory;
 use App\Models\Province;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -103,6 +104,10 @@ class AttendanceController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        if ($request->user() && $request->user()->isHost()) {
+            abort(403, 'Access denied. Host role is not authorized to register attendees.');
+        }
+
         $catRules = $this->resolveCategoryJurisdictionRules($request->integer('category_id'));
         $isGovOrPswdo = $catRules['isGovOrPswdo'];
 
@@ -180,11 +185,24 @@ class AttendanceController extends Controller
             ->orderBy('city_name')
             ->get(['city_code', 'city_name', 'prov_code']);
 
+        $catInput = $request->input('category_ids') ?? $request->input('category_id');
+        $categoryIds = is_array($catInput)
+            ? array_filter($catInput)
+            : (is_string($catInput) && $catInput !== '' && $catInput !== 'all'
+                ? array_filter(explode(',', $catInput))
+                : []);
+
         $query = Attendee::with(['event', 'category', 'province', 'city', 'barangay', 'creator'])
             ->when($event, fn ($q) => $q->where('event_id', $event->id))
-            ->when($request->input('category_id'), fn ($q, $cat) => $q->where('category_id', $cat))
+            ->when(! empty($categoryIds), fn ($q) => $q->whereIn('category_id', $categoryIds))
             ->when(in_array($request->input('status'), ['called', 'registered', 'invited'], true), function ($q) use ($request) {
                 $q->where('status', $request->input('status'));
+            })
+            ->when($request->input('attendance_mode') === 'without_rep' || $request->input('attendance_mode') === 'in_person', function ($q) {
+                $q->where('is_attending', true)->whereNull('rep_fullname');
+            })
+            ->when($request->input('attendance_mode') === 'with_rep' || $request->input('attendance_mode') === 'represented', function ($q) {
+                $q->where(fn ($sq) => $sq->where('is_attending', false)->orWhereNotNull('rep_fullname'));
             })
             ->when($request->input('province_id'), fn ($q, $prov) => $q->where('province_id', $prov))
             ->when($request->input('city_id'), fn ($q, $city) => $q->where('city_id', $city))
@@ -218,7 +236,94 @@ class AttendanceController extends Controller
             'provinces' => $provinces,
             'cities' => $cities,
             'attendees' => $attendees,
-            'filters' => $request->only(['event_id', 'category_id', 'status', 'search', 'province_id', 'city_id', 'per_page']),
+            'filters' => $request->only(['event_id', 'category_id', 'category_ids', 'status', 'search', 'province_id', 'city_id', 'per_page', 'attendance_mode']),
+        ]);
+    }
+
+    /**
+     * Fetch filtered attendee dataset and summaries specifically formatted for printing and print preview.
+     */
+    public function printData(Request $request): JsonResponse
+    {
+        $eventId = $request->input('event_id');
+        $event = null;
+        if ($eventId && $eventId !== 'all') {
+            $event = Event::find($eventId);
+        } elseif (! $request->has('event_id') || $request->input('event_id') === '') {
+            $event = Event::where('status', 'active')->latest()->first();
+        }
+
+        $catInput = $request->input('category_ids') ?? $request->input('category_id');
+        $categoryIds = is_array($catInput)
+            ? array_filter($catInput)
+            : (is_string($catInput) && $catInput !== '' && $catInput !== 'all'
+                ? array_filter(explode(',', $catInput))
+                : []);
+
+        $query = Attendee::with(['event', 'category', 'province', 'city', 'barangay', 'creator'])
+            ->when($event, fn ($q) => $q->where('event_id', $event->id))
+            ->when(! empty($categoryIds), fn ($q) => $q->whereIn('category_id', $categoryIds))
+            ->where('status', 'invited')
+            ->when($request->input('attendance_mode') === 'without_rep' || $request->input('attendance_mode') === 'in_person', function ($q) {
+                $q->where('is_attending', true)->whereNull('rep_fullname');
+            })
+            ->when($request->input('attendance_mode') === 'with_rep' || $request->input('attendance_mode') === 'represented', function ($q) {
+                $q->where(fn ($sq) => $sq->where('is_attending', false)->orWhereNotNull('rep_fullname'));
+            })
+            ->when($request->filled('province_id') && $request->input('province_id') !== 'all', fn ($q) => $q->where('province_id', $request->input('province_id')))
+            ->when($request->filled('city_id') && $request->input('city_id') !== 'all', fn ($q) => $q->where('city_id', $request->input('city_id')))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->input('search');
+                $q->where(function ($sq) use ($search) {
+                    $sq->where('fullname', 'like', "%{$search}%")
+                        ->orWhere('position', 'like', "%{$search}%")
+                        ->orWhere('agency_name', 'like', "%{$search}%")
+                        ->orWhere('rep_fullname', 'like', "%{$search}%")
+                        ->orWhere('rep_position', 'like', "%{$search}%")
+                        ->orWhereHas('province', fn ($pq) => $pq->where('prov_name', 'like', "%{$search}%"))
+                        ->orWhereHas('city', fn ($cq) => $cq->where('city_name', 'like', "%{$search}%"))
+                        ->orWhereHas('barangay', fn ($bq) => $bq->where('brgy_name', 'like', "%{$search}%"));
+                });
+            });
+
+        $sortBy = $request->input('sort_by', 'protocol');
+        if ($sortBy === 'name_asc') {
+            $query->orderBy('fullname', 'asc');
+        } elseif ($sortBy === 'name_desc') {
+            $query->orderBy('fullname', 'desc');
+        } elseif ($sortBy === 'time_asc') {
+            $query->orderBy('created_at', 'asc');
+        } elseif ($sortBy === 'time_desc') {
+            $query->orderBy('created_at', 'desc');
+        } elseif ($sortBy === 'lgu') {
+            $query->leftJoin('lib_provinces', 'attendees.province_id', '=', 'lib_provinces.prov_code')
+                ->leftJoin('lib_cities', 'attendees.city_id', '=', 'lib_cities.city_code')
+                ->select('attendees.*')
+                ->orderBy('lib_provinces.prov_name', 'asc')
+                ->orderBy('lib_cities.city_name', 'asc')
+                ->orderBy('attendees.fullname', 'asc');
+        } elseif ($sortBy === 'protocol') {
+            $query->leftJoin('guest_categories', 'attendees.category_id', '=', 'guest_categories.id')
+                ->select('attendees.*')
+                ->orderBy('guest_categories.order', 'asc')
+                ->orderBy('attendees.created_at', 'asc');
+        } else {
+            $query->latest('created_at');
+        }
+
+        $attendees = $query->get();
+
+        return response()->json([
+            'event' => $event,
+            'attendees' => $attendees,
+            'summary' => [
+                'total' => $attendees->count(),
+                'in_person' => $attendees->where('is_attending', true)->whereNull('rep_fullname')->count(),
+                'represented' => $attendees->filter(fn ($a) => ! $a->is_attending || ! empty($a->rep_fullname))->count(),
+                'called' => $attendees->where('status', 'called')->count(),
+                'registered' => $attendees->where('status', 'registered')->count(),
+                'invited' => $attendees->where('status', 'invited')->count(),
+            ],
         ]);
     }
 

@@ -1,8 +1,9 @@
-import { Link } from '@inertiajs/react';
-import { Home, LayoutGrid, Settings, Tag, Users } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { Home, LayoutGrid, Megaphone, Settings, Tag, Tv, Users } from 'lucide-react';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
+import type { User } from '@/types';
 
 /**
  * Mobile Bottom Navigation Dock
@@ -12,13 +13,15 @@ import { dashboard } from '@/routes';
  */
 export function MobileBottomNav() {
     const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
+    const { auth } = usePage().props as { auth?: { user?: User } };
+    const role = auth?.user?.role || 'staff';
 
     return (
         <nav
             aria-label="Mobile Navigation"
             className="fixed bottom-0 inset-x-0 z-40 flex h-16 items-center justify-around border-t border-border/70 bg-background/95 backdrop-blur-md px-2 shadow-lg md:hidden safe-area-pb"
         >
-            {/* 1. Home Link */}
+            {/* 1. Home Link (All) */}
             <Link
                 href={dashboard()}
                 prefetch
@@ -33,20 +36,50 @@ export function MobileBottomNav() {
                 <span className="text-[10px] tracking-tight">Home</span>
             </Link>
 
-            {/* 2. Categories Link */}
-            <Link
-                href="/categories"
-                prefetch
-                className={cn(
-                    'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
-                    isCurrentOrParentUrl('/categories')
-                        ? 'text-primary font-bold'
-                        : 'text-muted-foreground hover:text-foreground'
-                )}
-            >
-                <Tag className="size-5" />
-                <span className="text-[10px] tracking-tight">Categories</span>
-            </Link>
+            {/* 2. Primary Role Action */}
+            {role === 'host' ? (
+                <Link
+                    href="/host"
+                    prefetch
+                    className={cn(
+                        'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
+                        isCurrentOrParentUrl('/host')
+                            ? 'text-primary font-bold'
+                            : 'text-muted-foreground hover:text-foreground'
+                    )}
+                >
+                    <Megaphone className="size-5" />
+                    <span className="text-[10px] tracking-tight">Host</span>
+                </Link>
+            ) : role === 'admin' ? (
+                <Link
+                    href="/categories"
+                    prefetch
+                    className={cn(
+                        'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
+                        isCurrentOrParentUrl('/categories')
+                            ? 'text-primary font-bold'
+                            : 'text-muted-foreground hover:text-foreground'
+                    )}
+                >
+                    <Tag className="size-5" />
+                    <span className="text-[10px] tracking-tight">Categories</span>
+                </Link>
+            ) : (
+                <Link
+                    href="/attendees"
+                    prefetch
+                    className={cn(
+                        'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
+                        isCurrentUrl('/attendees')
+                            ? 'text-primary font-bold'
+                            : 'text-muted-foreground hover:text-foreground'
+                    )}
+                >
+                    <Users className="size-5" />
+                    <span className="text-[10px] tracking-tight">Attendees</span>
+                </Link>
+            )}
 
             {/* 3. Center Menu Launcher (Navigates to dedicated Menu Page) */}
             <Link
@@ -77,22 +110,52 @@ export function MobileBottomNav() {
                 </span>
             </Link>
 
-            {/* 4. Attendees Link */}
-            <Link
-                href="/attendees"
-                prefetch
-                className={cn(
-                    'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
-                    isCurrentUrl('/attendees')
-                        ? 'text-primary font-bold'
-                        : 'text-muted-foreground hover:text-foreground'
-                )}
-            >
-                <Users className="size-5" />
-                <span className="text-[10px] tracking-tight">Attendees</span>
-            </Link>
+            {/* 4. Secondary Action */}
+            {role === 'host' ? (
+                <Link
+                    href="/display"
+                    prefetch
+                    className={cn(
+                        'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
+                        isCurrentUrl('/display')
+                            ? 'text-primary font-bold'
+                            : 'text-muted-foreground hover:text-foreground'
+                    )}
+                >
+                    <Tv className="size-5" />
+                    <span className="text-[10px] tracking-tight">Display</span>
+                </Link>
+            ) : role === 'admin' ? (
+                <Link
+                    href="/attendees"
+                    prefetch
+                    className={cn(
+                        'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
+                        isCurrentUrl('/attendees')
+                            ? 'text-primary font-bold'
+                            : 'text-muted-foreground hover:text-foreground'
+                    )}
+                >
+                    <Users className="size-5" />
+                    <span className="text-[10px] tracking-tight">Attendees</span>
+                </Link>
+            ) : (
+                <Link
+                    href="/display"
+                    prefetch
+                    className={cn(
+                        'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
+                        isCurrentUrl('/display')
+                            ? 'text-primary font-bold'
+                            : 'text-muted-foreground hover:text-foreground'
+                    )}
+                >
+                    <Tv className="size-5" />
+                    <span className="text-[10px] tracking-tight">Display</span>
+                </Link>
+            )}
 
-            {/* 5. Settings Link */}
+            {/* 5. Settings Link (All) */}
             <Link
                 href="/settings"
                 prefetch

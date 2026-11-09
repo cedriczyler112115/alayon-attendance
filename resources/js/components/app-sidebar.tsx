@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutGrid,
     Megaphone,
@@ -20,35 +20,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
-
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Host Announcer',
-        href: '/host',
-        icon: Megaphone,
-    },
-    {
-        title: 'Attendance Registry',
-        href: '/attendees',
-        icon: UserCheck,
-    },
-    {
-        title: 'Guest Categories',
-        href: '/categories',
-        icon: Tag,
-    },
-    {
-        title: 'Settings',
-        href: '/settings',
-        icon: Settings,
-    },
-];
+import type { NavItem, User } from '@/types';
 
 const secondaryNavItems: NavItem[] = [
     {
@@ -59,6 +31,47 @@ const secondaryNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage().props as { auth?: { user?: User } };
+    const role = auth?.user?.role || 'staff';
+
+    const mainNavItems: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+            icon: LayoutGrid,
+        },
+    ];
+
+    if (role === 'host' || role === 'admin') {
+        mainNavItems.push({
+            title: 'Host Announcer',
+            href: '/host',
+            icon: Megaphone,
+        });
+    }
+
+    if (role === 'staff' || role === 'admin') {
+        mainNavItems.push({
+            title: 'Attendance Registry',
+            href: '/attendees',
+            icon: UserCheck,
+        });
+    }
+
+    if (role === 'admin') {
+        mainNavItems.push({
+            title: 'Guest Categories',
+            href: '/categories',
+            icon: Tag,
+        });
+    }
+
+    mainNavItems.push({
+        title: 'Settings',
+        href: '/settings',
+        icon: Settings,
+    });
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>

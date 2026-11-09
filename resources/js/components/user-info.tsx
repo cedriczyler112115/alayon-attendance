@@ -20,10 +20,19 @@ export function UserInfo({
                 </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                {showEmail && (
+                <div className="flex items-center gap-1.5">
+                    <span className="truncate font-semibold">{user.name}</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 text-primary bg-primary/10 rounded uppercase tracking-wider">
+                        {user.userlevel || user.role || 'Staff'}
+                    </span>
+                </div>
+                {showEmail ? (
                     <span className="truncate text-xs text-muted-foreground">
                         {user.email}
+                    </span>
+                ) : (
+                    <span className="truncate text-xs text-muted-foreground capitalize">
+                        {user.userlevel || user.role || 'Staff'} Level
                     </span>
                 )}
             </div>

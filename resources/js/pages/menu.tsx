@@ -9,6 +9,7 @@ import {
     Megaphone,
     Palette,
     Settings,
+    Shield,
     ShieldCheck,
     SlidersHorizontal,
     Sparkles,
@@ -16,16 +17,18 @@ import {
     Tv,
     User as UserIcon,
     UserCheck,
+    Users,
     Volume2,
     type LucideIcon,
 } from 'lucide-react';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { dashboard, logout } from '@/routes';
-import type { User } from '@/types';
+import type { User, UserRole } from '@/types';
 
 interface MenuItem {
     title: string;
@@ -33,15 +36,17 @@ interface MenuItem {
     icon: LucideIcon;
     gradientClass: string;
     description: string;
+    roles?: UserRole[];
 }
 
-const menuItems: MenuItem[] = [
+const allMenuItems: MenuItem[] = [
     {
         title: 'Dashboard',
         href: '/dashboard',
         icon: LayoutGrid,
         gradientClass: 'bg-linear-to-br from-blue-500 to-indigo-600 shadow-blue-500/25',
         description: 'Event overview & stats',
+        roles: ['admin', 'host', 'staff'],
     },
     {
         title: 'Host Announcer',
@@ -49,6 +54,7 @@ const menuItems: MenuItem[] = [
         icon: Megaphone,
         gradientClass: 'bg-linear-to-br from-purple-500 to-violet-600 shadow-purple-500/25',
         description: 'Stage queuing console',
+        roles: ['admin', 'host'],
     },
     {
         title: 'Attendees',
@@ -56,6 +62,7 @@ const menuItems: MenuItem[] = [
         icon: UserCheck,
         gradientClass: 'bg-linear-to-br from-emerald-500 to-teal-600 shadow-emerald-500/25',
         description: 'Registry & verification',
+        roles: ['admin', 'staff'],
     },
     {
         title: 'Categories',
@@ -63,6 +70,7 @@ const menuItems: MenuItem[] = [
         icon: Tag,
         gradientClass: 'bg-linear-to-br from-amber-500 to-orange-600 shadow-amber-500/25',
         description: 'Guest category manager',
+        roles: ['admin'],
     },
     {
         title: 'Big Screen',
@@ -70,6 +78,7 @@ const menuItems: MenuItem[] = [
         icon: Tv,
         gradientClass: 'bg-linear-to-br from-rose-500 to-red-600 shadow-rose-500/25',
         description: 'Live arrival display',
+        roles: ['admin', 'host', 'staff'],
     },
     {
         title: 'Protocol Order',
@@ -77,6 +86,15 @@ const menuItems: MenuItem[] = [
         icon: Crown,
         gradientClass: 'bg-linear-to-br from-yellow-500 to-amber-600 shadow-amber-500/25',
         description: 'Official seniority order',
+        roles: ['admin'],
+    },
+    {
+        title: 'User Levels',
+        href: '/settings/users',
+        icon: Users,
+        gradientClass: 'bg-linear-to-br from-violet-600 to-purple-800 shadow-purple-600/25',
+        description: 'Role access management',
+        roles: ['admin'],
     },
     {
         title: 'Audio Setup',
@@ -84,6 +102,7 @@ const menuItems: MenuItem[] = [
         icon: Volume2,
         gradientClass: 'bg-linear-to-br from-sky-500 to-blue-600 shadow-sky-500/25',
         description: 'Chime & speech settings',
+        roles: ['admin', 'host'],
     },
     {
         title: 'Settings',
@@ -91,6 +110,7 @@ const menuItems: MenuItem[] = [
         icon: SlidersHorizontal,
         gradientClass: 'bg-linear-to-br from-cyan-500 to-teal-600 shadow-cyan-500/25',
         description: 'System configurations',
+        roles: ['admin', 'host', 'staff'],
     },
     {
         title: 'Profile',
@@ -98,6 +118,7 @@ const menuItems: MenuItem[] = [
         icon: UserIcon,
         gradientClass: 'bg-linear-to-br from-slate-600 to-neutral-700 shadow-slate-500/25',
         description: 'Account information',
+        roles: ['admin', 'host', 'staff'],
     },
     {
         title: 'Security',
@@ -105,6 +126,7 @@ const menuItems: MenuItem[] = [
         icon: ShieldCheck,
         gradientClass: 'bg-linear-to-br from-zinc-600 to-zinc-800 shadow-zinc-500/25',
         description: 'Password & authentication',
+        roles: ['admin', 'host', 'staff'],
     },
     {
         title: 'Appearance',
@@ -112,6 +134,7 @@ const menuItems: MenuItem[] = [
         icon: Palette,
         gradientClass: 'bg-linear-to-br from-pink-500 to-rose-600 shadow-pink-500/25',
         description: 'Theme & display mode',
+        roles: ['admin', 'host', 'staff'],
     },
     {
         title: 'Welcome Screen',
@@ -119,13 +142,43 @@ const menuItems: MenuItem[] = [
         icon: Sparkles,
         gradientClass: 'bg-linear-to-br from-indigo-500 to-purple-600 shadow-indigo-500/25',
         description: 'Public landing page',
+        roles: ['admin', 'host', 'staff'],
     },
 ];
 
 export default function MenuPage() {
     const pageProps = usePage().props as { auth?: { user?: User } };
     const user = pageProps.auth?.user;
+    const role: UserRole = user?.role || 'staff';
     const getInitials = useInitials();
+
+    const menuItems = allMenuItems.filter(
+        (item) => !item.roles || item.roles.includes(role)
+    );
+
+    const getRoleBadge = (r: string) => {
+        switch (r) {
+            case 'admin':
+                return (
+                    <Badge className="bg-purple-600 text-white gap-1 px-2 py-0.5 text-[10px] font-bold">
+                        <Crown className="size-2.5" /> Admin
+                    </Badge>
+                );
+            case 'host':
+                return (
+                    <Badge className="bg-sky-600 text-white gap-1 px-2 py-0.5 text-[10px] font-bold">
+                        <Megaphone className="size-2.5" /> Host
+                    </Badge>
+                );
+            case 'staff':
+            default:
+                return (
+                    <Badge className="bg-emerald-600 text-white gap-1 px-2 py-0.5 text-[10px] font-bold">
+                        <UserCheck className="size-2.5" /> Staff
+                    </Badge>
+                );
+        }
+    };
 
     return (
         <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 flex flex-col pb-24">
@@ -188,9 +241,12 @@ export default function MenuPage() {
                                 Tap any module below to open
                             </p>
                         </div>
-                        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
-                            12 Modules
-                        </span>
+                        <div className="flex items-center gap-2">
+                            {user && getRoleBadge(user.role)}
+                            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+                                {menuItems.length} Modules
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -233,8 +289,9 @@ export default function MenuPage() {
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="min-w-0 flex-1">
-                                    <div className="truncate text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                                        {user.name}
+                                    <div className="flex items-center gap-1.5 truncate text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                                        <span>{user.name}</span>
+                                        {getRoleBadge(user.role)}
                                     </div>
                                     <div className="truncate text-xs text-muted-foreground">
                                         {user.email}

@@ -1,4 +1,13 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import {
+    Crown,
+    Palette,
+    Shield,
+    ShieldCheck,
+    User as UserIcon,
+    Users,
+    Volume2,
+} from 'lucide-react';
 import type { PropsWithChildren } from 'react';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
@@ -8,39 +17,61 @@ import { cn, toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
-import type { NavItem } from '@/types';
-
-const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Protocol Priority',
-        href: '/settings/protocol-priority',
-        icon: null,
-    },
-    {
-        title: 'Announcer Settings',
-        href: '/settings/announcer',
-        icon: null,
-    },
-    {
-        title: 'Profile',
-        href: edit(),
-        icon: null,
-    },
-    {
-        title: 'Security',
-        href: editSecurity(),
-        icon: null,
-    },
-    {
-        title: 'Appearance',
-        href: editAppearance(),
-        icon: null,
-    },
-];
+import type { NavItem, User } from '@/types';
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
+    const { auth } = usePage().props as { auth: { user: User } };
+    const user = auth?.user;
+    const role = user?.role || 'staff';
+
     const isProtocolPriority = isCurrentOrParentUrl('/settings/protocol-priority');
+    const isUsersPage = isCurrentOrParentUrl('/settings/users');
+    const isWide = isProtocolPriority || isUsersPage;
+
+    const sidebarNavItems: NavItem[] = [];
+
+    // Protocol Priority (Admin only)
+    if (role === 'admin') {
+        sidebarNavItems.push({
+            title: 'Protocol Priority',
+            href: '/settings/protocol-priority',
+            icon: Crown,
+        });
+        sidebarNavItems.push({
+            title: 'User Levels',
+            href: '/settings/users',
+            icon: Users,
+        });
+    }
+
+    // Announcer Settings (Host & Admin)
+    if (role === 'admin' || role === 'host') {
+        sidebarNavItems.push({
+            title: 'Announcer Settings',
+            href: '/settings/announcer',
+            icon: Volume2,
+        });
+    }
+
+    // Profile & Security (All Users)
+    sidebarNavItems.push(
+        {
+            title: 'Profile',
+            href: edit(),
+            icon: UserIcon,
+        },
+        {
+            title: 'Security',
+            href: editSecurity(),
+            icon: ShieldCheck,
+        },
+        {
+            title: 'Appearance',
+            href: editAppearance(),
+            icon: Palette,
+        }
+    );
 
     return (
         <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
@@ -67,7 +98,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                             >
                                 <Link href={item.href}>
                                     {item.icon && (
-                                        <item.icon className="h-4 w-4" />
+                                        <item.icon className="h-4 w-4 mr-2" />
                                     )}
                                     {item.title}
                                 </Link>
@@ -81,17 +112,12 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                 <div
                     className={cn(
                         'flex-1 min-w-0',
-                        isProtocolPriority
-                            ? 'w-full max-w-none'
-                            : 'md:max-w-2xl'
+                        isWide ? 'w-full max-w-none' : 'md:max-w-2xl'
                     )}
                 >
                     <section
                         className={cn(
-                            'space-y-12',
-                            isProtocolPriority
-                                ? 'w-full max-w-none'
-                                : 'max-w-xl'
+                            isWide ? 'w-full max-w-none space-y-6' : 'max-w-xl space-y-12'
                         )}
                     >
                         {children}

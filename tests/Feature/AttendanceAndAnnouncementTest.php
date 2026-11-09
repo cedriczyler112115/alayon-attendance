@@ -813,3 +813,96 @@ test('protocol priority settings can update sequence and allow_call for categori
         ->assertJsonPath('categories.0.allow_call', true)
         ->assertJsonPath('categories.1.allow_call', false);
 });
+
+test('attendees print-data endpoint returns filtered data with in-person and representative counts', function () {
+    $user = User::factory()->create();
+
+    // 1. Personal attendee (without representative) - invited
+    $attendeeInPerson = Attendee::create([
+        'event_id' => $this->event->id,
+        'category_id' => $this->govCategory->id,
+        'fullname' => 'Gov. Angel Amante',
+        'position' => 'Provincial Governor',
+        'province_id' => $this->province->prov_code,
+        'status' => 'invited',
+        'is_attending' => true,
+    ]);
+
+    // 2. Represented attendee (with representative) - invited
+    $attendeeRepresented = Attendee::create([
+        'event_id' => $this->event->id,
+        'category_id' => $this->mayorCategory->id,
+        'fullname' => 'Mayor Judy Amante',
+        'position' => 'City Mayor',
+        'province_id' => $this->province->prov_code,
+        'city_id' => $this->city->city_code,
+        'status' => 'invited',
+        'is_attending' => false,
+        'rep_prefix_name' => 'Atty.',
+        'rep_fullname' => 'Pedro Penduko',
+        'rep_position' => 'Chief of Staff',
+    ]);
+
+    // 3. Attendee with called status (should be EXCLUDED since print-data filters only status = invited)
+    $attendeeCalled = Attendee::create([
+        'event_id' => $this->event->id,
+        'category_id' => $this->pswdoCategory->id,
+        'fullname' => 'PSWDO Head Maria Santos',
+        'position' => 'PSWDO Head',
+        'province_id' => $this->province->prov_code,
+        'status' => 'called',
+        'is_attending' => true,
+    ]);
+
+    // Test print data - returns only invited attendees
+    $response = $this->actingAs($user)->getJson(route('attendees.print-data', [
+        'event_id' => $this->event->id,
+    ]));
+
+    $response->assertOk()
+        ->assertJsonPath('summary.total', 2)
+        ->assertJsonPath('summary.in_person', 1)
+        ->assertJsonPath('summary.represented', 1)
+        ->assertJsonPath('summary.called', 0)
+        ->assertJsonPath('summary.invited', 2);
+
+    // Test print data - filter by in_person (without representative)
+    $inPersonResponse = $this->actingAs($user)->getJson(route('attendees.print-data', [
+        'event_id' => $this->event->id,
+        'attendance_mode' => 'without_rep',
+    ]));
+
+    $inPersonResponse->assertOk()
+        ->assertJsonCount(1, 'attendees')
+        ->assertJsonPath('attendees.0.fullname', 'Gov. Angel Amante');
+
+    // Test print data - filter by with_rep (represented)
+    $representedResponse = $this->actingAs($user)->getJson(route('attendees.print-data', [
+        'event_id' => $this->event->id,
+        'attendance_mode' => 'with_rep',
+    ]));
+
+    $representedResponse->assertOk()
+        ->assertJsonCount(1, 'attendees')
+        ->assertJsonPath('attendees.0.fullname', 'Mayor Judy Amante')
+        ->assertJsonPath('attendees.0.rep_fullname', 'Pedro Penduko');
+
+    // Test print data - filter by multiple categories (array or comma-separated)
+    $multiCategoryResponse = $this->actingAs($user)->getJson(route('attendees.print-data', [
+        'event_id' => $this->event->id,
+        'category_ids' => "{$this->govCategory->id},{$this->mayorCategory->id}",
+    ]));
+
+    $multiCategoryResponse->assertOk()
+        ->assertJsonCount(2, 'attendees');
+
+    // Test single category via category_ids
+    $singleCategoryResponse = $this->actingAs($user)->getJson(route('attendees.print-data', [
+        'event_id' => $this->event->id,
+        'category_ids' => "{$this->govCategory->id}",
+    ]));
+
+    $singleCategoryResponse->assertOk()
+        ->assertJsonCount(1, 'attendees')
+        ->assertJsonPath('attendees.0.fullname', 'Gov. Angel Amante');
+});

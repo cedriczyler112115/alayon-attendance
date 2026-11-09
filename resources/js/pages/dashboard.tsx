@@ -1,25 +1,28 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import {
     ArrowRight,
     Building2,
     Calendar,
     CheckCircle2,
     Clock,
+    Crown,
     ExternalLink,
     Landmark,
     MapPin,
     Megaphone,
     Plus,
+    Shield,
     Sparkles,
     Tag,
     Tv,
     UserCheck,
     Users,
+    Volume2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { Attendee, EventItem, GuestCategory } from '@/types';
+import type { Attendee, EventItem, GuestCategory, User } from '@/types';
 
 type CategoryWithCount = GuestCategory & {
     attendees_count: number;
@@ -38,6 +41,13 @@ type Props = {
 };
 
 export default function Dashboard({ activeEvent, categories = [], stats }: Props) {
+    const { auth } = usePage().props as { auth?: { user?: User } };
+    const user = auth?.user;
+    const role = user?.role || 'staff';
+    const isHost = role === 'host';
+    const isStaff = role === 'staff';
+    const isAdmin = role === 'admin';
+
     const pendingCount = (stats.total_registered || 0) - (stats.total_announced || 0);
 
     return (
@@ -80,13 +90,26 @@ export default function Dashboard({ activeEvent, categories = [], stats }: Props
                             </div>
 
                             <div className="flex flex-wrap items-center gap-2.5">
-                                <Button asChild className="gap-2 bg-primary font-semibold shadow-sm">
-                                    <Link href="/host">
-                                        <Megaphone className="size-4" />
-                                        Host Announcer Console
-                                        <ArrowRight className="size-4" />
-                                    </Link>
-                                </Button>
+                                {(isHost || isAdmin) && (
+                                    <Button asChild className="gap-2 bg-primary font-semibold shadow-sm">
+                                        <Link href="/host">
+                                            <Megaphone className="size-4" />
+                                            Host Announcer
+                                            <ArrowRight className="size-4" />
+                                        </Link>
+                                    </Button>
+                                )}
+
+                                {(isStaff || isAdmin) && (
+                                    <Button asChild className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm">
+                                        <Link href="/attendees">
+                                            <UserCheck className="size-4" />
+                                            Attendance Registry
+                                            <ArrowRight className="size-4" />
+                                        </Link>
+                                    </Button>
+                                )}
+
                                 <Button asChild variant="outline" className="gap-1.5">
                                     <Link href={`/events/${activeEvent.id}/display`} target="_blank">
                                         <Tv className="size-4" />
@@ -159,12 +182,14 @@ export default function Dashboard({ activeEvent, categories = [], stats }: Props
                             <Tag className="size-4 text-primary" />
                             <span>Attendance Categorization (Dynamic Data)</span>
                         </div>
-                        <Button asChild variant="ghost" size="sm" className="gap-1 text-xs text-primary">
-                            <Link href="/categories">
-                                <span>Manage Categories</span>
-                                <ArrowRight className="size-3.5" />
-                            </Link>
-                        </Button>
+                        {isAdmin && (
+                            <Button asChild variant="ghost" size="sm" className="gap-1 text-xs text-primary">
+                                <Link href="/categories">
+                                    <span>Manage Categories</span>
+                                    <ArrowRight className="size-3.5" />
+                                </Link>
+                            </Button>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -230,12 +255,22 @@ export default function Dashboard({ activeEvent, categories = [], stats }: Props
                                 <CardTitle className="text-base font-bold">Recent Announced Guests</CardTitle>
                                 <CardDescription className="text-xs">Latest VIPs called by the host</CardDescription>
                             </div>
-                            <Button asChild variant="ghost" size="sm" className="gap-1 text-xs text-primary">
-                                <Link href="/host">
-                                    <span>Host Console</span>
-                                    <ArrowRight className="size-3.5" />
-                                </Link>
-                            </Button>
+                            {(isHost || isAdmin) && (
+                                <Button asChild variant="ghost" size="sm" className="gap-1 text-xs text-primary">
+                                    <Link href="/host">
+                                        <span>Host Console</span>
+                                        <ArrowRight className="size-3.5" />
+                                    </Link>
+                                </Button>
+                            )}
+                            {isStaff && (
+                                <Button asChild variant="ghost" size="sm" className="gap-1 text-xs text-emerald-600">
+                                    <Link href="/attendees">
+                                        <span>Attendees</span>
+                                        <ArrowRight className="size-3.5" />
+                                    </Link>
+                                </Button>
+                            )}
                         </CardHeader>
                         <CardContent className="divide-y divide-neutral-100 dark:divide-neutral-800 p-0">
                             {stats.recent_announced && stats.recent_announced.length > 0 ? (
@@ -250,60 +285,63 @@ export default function Dashboard({ activeEvent, categories = [], stats }: Props
                                                 {attendee.barangay && ` (Brgy. ${attendee.barangay.brgy_name})`}
                                             </div>
                                         </div>
-                                        <Badge variant="default" className="gap-1 bg-green-600 text-white text-[10px]">
-                                            <CheckCircle2 className="size-3" />
-                                            <span>Called</span>
+                                        <Badge variant="outline" className="text-xs border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300">
+                                            Called
                                         </Badge>
                                     </div>
                                 ))
                             ) : (
                                 <div className="p-8 text-center text-xs text-muted-foreground">
-                                    No guests have been announced yet.
+                                    No attendees have been announced yet.
                                 </div>
                             )}
                         </CardContent>
                     </Card>
 
-                    {/* Quick Access Tiles */}
+                    {/* Quick Role-Specific Navigation Shortcuts */}
                     <Card className="shadow-xs">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-base font-bold">Assembly Quick Operations</CardTitle>
                             <CardDescription className="text-xs">Shortcuts to key attendance and announcement workflows</CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-3 sm:grid-cols-2">
-                            <Link
-                                href="/host"
-                                className="group flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-4 transition-all hover:border-primary hover:shadow-xs dark:border-neutral-800 dark:bg-neutral-900"
-                            >
-                                <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                    <Megaphone className="size-5" />
-                                </div>
-                                <div className="mt-3">
-                                    <div className="font-bold text-sm text-neutral-900 group-hover:text-primary dark:text-white">
-                                        Host Announcer Console
+                            {(isHost || isAdmin) && (
+                                <Link
+                                    href="/host"
+                                    className="group flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-4 transition-all hover:border-primary hover:shadow-xs dark:border-neutral-800 dark:bg-neutral-900"
+                                >
+                                    <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                        <Megaphone className="size-5" />
                                     </div>
-                                    <div className="text-xs text-neutral-500">
-                                        Tag arrival announcements in real time
+                                    <div className="mt-3">
+                                        <div className="font-bold text-sm text-neutral-900 group-hover:text-primary dark:text-white">
+                                            Host Announcer Console
+                                        </div>
+                                        <div className="text-xs text-neutral-500">
+                                            Tag arrival announcements in real time
+                                        </div>
                                     </div>
-                                </div>
-                            </Link>
+                                </Link>
+                            )}
 
-                            <Link
-                                href="/attendees"
-                                className="group flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-4 transition-all hover:border-primary hover:shadow-xs dark:border-neutral-800 dark:bg-neutral-900"
-                            >
-                                <div className="flex size-10 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
-                                    <UserCheck className="size-5" />
-                                </div>
-                                <div className="mt-3">
-                                    <div className="font-bold text-sm text-neutral-900 group-hover:text-primary dark:text-white">
-                                        Attendance Registry
+                            {(isStaff || isAdmin) && (
+                                <Link
+                                    href="/attendees"
+                                    className="group flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-4 transition-all hover:border-primary hover:shadow-xs dark:border-neutral-800 dark:bg-neutral-900"
+                                >
+                                    <div className="flex size-10 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                                        <UserCheck className="size-5" />
                                     </div>
-                                    <div className="text-xs text-neutral-500">
-                                        Manage guest entries & check-ins
+                                    <div className="mt-3">
+                                        <div className="font-bold text-sm text-neutral-900 group-hover:text-primary dark:text-white">
+                                            Attendance Registry
+                                        </div>
+                                        <div className="text-xs text-neutral-500">
+                                            Manage guest entries & check-ins
+                                        </div>
                                     </div>
-                                </div>
-                            </Link>
+                                </Link>
+                            )}
 
                             <Link
                                 href="/display"
@@ -324,22 +362,62 @@ export default function Dashboard({ activeEvent, categories = [], stats }: Props
                                 </div>
                             </Link>
 
-                            <Link
-                                href="/categories"
-                                className="group flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-4 transition-all hover:border-primary hover:shadow-xs dark:border-neutral-800 dark:bg-neutral-900"
-                            >
-                                <div className="flex size-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
-                                    <Tag className="size-5" />
-                                </div>
-                                <div className="mt-3">
-                                    <div className="font-bold text-sm text-neutral-900 group-hover:text-primary dark:text-white">
-                                        Dynamic Categories
+                            {isAdmin && (
+                                <Link
+                                    href="/categories"
+                                    className="group flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-4 transition-all hover:border-primary hover:shadow-xs dark:border-neutral-800 dark:bg-neutral-900"
+                                >
+                                    <div className="flex size-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
+                                        <Tag className="size-5" />
                                     </div>
-                                    <div className="text-xs text-neutral-500">
-                                        Add/edit governors, mayors, pswdo, cswdo
+                                    <div className="mt-3">
+                                        <div className="font-bold text-sm text-neutral-900 group-hover:text-primary dark:text-white">
+                                            Dynamic Categories
+                                        </div>
+                                        <div className="text-xs text-neutral-500">
+                                            Add/edit governors, mayors, pswdo, cswdo
+                                        </div>
                                     </div>
-                                </div>
-                            </Link>
+                                </Link>
+                            )}
+
+                            {isHost && (
+                                <Link
+                                    href="/settings/announcer"
+                                    className="group flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-4 transition-all hover:border-primary hover:shadow-xs dark:border-neutral-800 dark:bg-neutral-900"
+                                >
+                                    <div className="flex size-10 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600">
+                                        <Volume2 className="size-5" />
+                                    </div>
+                                    <div className="mt-3">
+                                        <div className="font-bold text-sm text-neutral-900 group-hover:text-primary dark:text-white">
+                                            Announcer Audio Settings
+                                        </div>
+                                        <div className="text-xs text-neutral-500">
+                                            Configure chimes, speech rate & volume
+                                        </div>
+                                    </div>
+                                </Link>
+                            )}
+
+                            {isAdmin && (
+                                <Link
+                                    href="/settings/users"
+                                    className="group flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-4 transition-all hover:border-primary hover:shadow-xs dark:border-neutral-800 dark:bg-neutral-900"
+                                >
+                                    <div className="flex size-10 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600">
+                                        <Crown className="size-5" />
+                                    </div>
+                                    <div className="mt-3">
+                                        <div className="font-bold text-sm text-neutral-900 group-hover:text-primary dark:text-white">
+                                            User Level Privileges
+                                        </div>
+                                        <div className="text-xs text-neutral-500">
+                                            Assign Host, Staff, Admin permissions
+                                        </div>
+                                    </div>
+                                </Link>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
