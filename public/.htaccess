@@ -5,6 +5,18 @@
 
     RewriteEngine On
 
+    # PWA Service Worker Scope Header & Manifest MIME Types
+    <IfModule mod_headers.c>
+        <FilesMatch "(sw\.js|workbox-.*\.js)$">
+            Header set Service-Worker-Allowed "/"
+            Header set Cache-Control "no-cache, no-store, must-revalidate"
+        </FilesMatch>
+        <FilesMatch "\.(webmanifest|json)$">
+            Header set Access-Control-Allow-Origin "*"
+            Header set Cache-Control "no-cache, no-store, must-revalidate"
+        </FilesMatch>
+    </IfModule>
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

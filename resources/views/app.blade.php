@@ -14,11 +14,11 @@
         <meta name="format-detection" content="telephone=no">
 
         {{-- Dynamic Theme Colors for Mobile Status Bar & Browser Chrome --}}
-        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+        <meta name="theme-color" content="#059669" media="(prefers-color-scheme: light)">
         <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
 
-        {{-- Web App Manifest for Standalone / Fullscreen Display --}}
-        <link rel="manifest" href="/manifest.json">
+        {{-- Progressive Web App (PWA) Manifest --}}
+        <link rel="manifest" href="/manifest.webmanifest">
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>

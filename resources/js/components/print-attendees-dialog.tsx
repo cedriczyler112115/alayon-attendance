@@ -20,7 +20,14 @@ import {
     Users,
     X,
 } from 'lucide-react';
-import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, {
+    useCallback,
+    useEffect,
+    useId,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -41,10 +48,22 @@ import { Switch } from '@/components/ui/switch';
 import { getCategoryCustomField } from '@/lib/category-custom-fields';
 import { getAttendeePositionWithJurisdiction } from '@/lib/host-announcer-utils';
 import { cn } from '@/lib/utils';
-import type { Attendee, CityItem, EventItem, GuestCategory, ProvinceItem } from '@/types';
+import type {
+    Attendee,
+    CityItem,
+    EventItem,
+    GuestCategory,
+    ProvinceItem,
+} from '@/types';
 
 type AttendanceFilterMode = 'all' | 'without_rep' | 'with_rep';
-type SortMode = 'protocol' | 'name_asc' | 'name_desc' | 'time_asc' | 'time_desc' | 'lgu';
+type SortMode =
+    | 'protocol'
+    | 'name_asc'
+    | 'name_desc'
+    | 'time_asc'
+    | 'time_desc'
+    | 'lgu';
 type GroupMode = 'category' | 'province' | 'none';
 type OrientationMode = 'portrait' | 'landscape';
 
@@ -60,7 +79,12 @@ type SummaryData = {
 type Props = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    events: { id: number; title: string; status?: string; event_date?: string }[];
+    events: {
+        id: number;
+        title: string;
+        status?: string;
+        event_date?: string;
+    }[];
     currentEvent?: EventItem | null;
     categories: GuestCategory[];
     provinces?: ProvinceItem[];
@@ -82,6 +106,20 @@ function formatTime(dateString?: string | null): string {
     try {
         const d = new Date(dateString);
         return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+        return dateString;
+    }
+}
+
+function formatRegistrationDate(dateString?: string | null): string {
+    if (!dateString) return '';
+    try {
+        const d = new Date(dateString);
+        return d.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        });
     } catch {
         return dateString;
     }
@@ -111,10 +149,15 @@ export function PrintAttendeesDialog({
     cities = [],
     initialFilters = {},
 }: Props) {
-    const parseInitialCategoryIds = (filters?: Props['initialFilters']): (string | number)[] => {
+    const parseInitialCategoryIds = (
+        filters?: Props['initialFilters'],
+    ): (string | number)[] => {
         if (!filters) return [];
         if (Array.isArray(filters.category_ids)) return filters.category_ids;
-        if (typeof filters.category_ids === 'string' && filters.category_ids.trim()) {
+        if (
+            typeof filters.category_ids === 'string' &&
+            filters.category_ids.trim()
+        ) {
             return filters.category_ids.split(',').filter(Boolean);
         }
         if (filters.category_id) {
@@ -125,20 +168,20 @@ export function PrintAttendeesDialog({
 
     // Filter States
     const [eventId, setEventId] = useState<string | number>(
-        initialFilters.event_id || currentEvent?.id || ''
+        initialFilters.event_id || currentEvent?.id || '',
     );
     const [categoryIds, setCategoryIds] = useState<(string | number)[]>(() =>
-        parseInitialCategoryIds(initialFilters)
+        parseInitialCategoryIds(initialFilters),
     );
     const [attendanceMode, setAttendanceMode] = useState<AttendanceFilterMode>(
-        (initialFilters.attendance_mode as AttendanceFilterMode) || 'all'
+        (initialFilters.attendance_mode as AttendanceFilterMode) || 'all',
     );
-    const status = 'invited';
+    const status = 'registered';
     const [provinceId, setProvinceId] = useState<string | number>(
-        initialFilters.province_id || ''
+        initialFilters.province_id || '',
     );
     const [cityId, setCityId] = useState<string | number>(
-        initialFilters.city_id || ''
+        initialFilters.city_id || '',
     );
     const [search, setSearch] = useState<string>(initialFilters.search || '');
 
@@ -147,16 +190,23 @@ export function PrintAttendeesDialog({
     const [groupBy, setGroupBy] = useState<GroupMode>('category');
 
     // Print Layout Customizations
-    const [orientation, setOrientation] = useState<OrientationMode>('landscape');
-    const [showSignatureColumn, setShowSignatureColumn] = useState<boolean>(true);
+    const [orientation, setOrientation] =
+        useState<OrientationMode>('landscape');
+    const [showSignatureColumn, setShowSignatureColumn] =
+        useState<boolean>(true);
     const [showAgency, setShowAgency] = useState<boolean>(true);
     const [showRegisteredTime, setShowRegisteredTime] = useState<boolean>(true);
     const [showStatus, setShowStatus] = useState<boolean>(true);
     const [showSummaryStats, setShowSummaryStats] = useState<boolean>(true);
     const [showSignatories, setShowSignatories] = useState<boolean>(true);
-    const [preparedByName, setPreparedByName] = useState<string>('Secretariat Committee');
-    const [verifiedByName, setVerifiedByName] = useState<string>('Registration Head');
-    const [notedByName, setNotedByName] = useState<string>('Event Directorate / Chair');
+    const [preparedByName, setPreparedByName] = useState<string>(
+        'Secretariat Committee',
+    );
+    const [verifiedByName, setVerifiedByName] =
+        useState<string>('Registration Head');
+    const [notedByName, setNotedByName] = useState<string>(
+        'Event Directorate / Chair',
+    );
 
     // UI View State
     const [isOptionsExpanded, setIsOptionsExpanded] = useState<boolean>(false);
@@ -173,14 +223,19 @@ export function PrintAttendeesDialog({
         registered: 0,
         invited: 0,
     });
-    const [resolvedEvent, setResolvedEvent] = useState<EventItem | null>(currentEvent || null);
+    const [resolvedEvent, setResolvedEvent] = useState<EventItem | null>(
+        currentEvent || null,
+    );
 
     // Synchronize filters when modal opens or initialFilters change
     useEffect(() => {
         if (open) {
             setEventId(initialFilters.event_id || currentEvent?.id || '');
             setCategoryIds(parseInitialCategoryIds(initialFilters));
-            setAttendanceMode((initialFilters.attendance_mode as AttendanceFilterMode) || 'all');
+            setAttendanceMode(
+                (initialFilters.attendance_mode as AttendanceFilterMode) ||
+                    'all',
+            );
             setProvinceId(initialFilters.province_id || '');
             setCityId(initialFilters.city_id || '');
             setSearch(initialFilters.search || '');
@@ -198,7 +253,9 @@ export function PrintAttendeesDialog({
         setProvinceId(newProvId);
         if (cityId) {
             const stillValid = cities.some(
-                (c) => String(c.prov_code) === String(newProvId) && String(c.city_code) === String(cityId)
+                (c) =>
+                    String(c.prov_code) === String(newProvId) &&
+                    String(c.city_code) === String(cityId),
             );
             if (!stillValid) {
                 setCityId('');
@@ -230,18 +287,21 @@ export function PrintAttendeesDialog({
             if (attendanceMode && attendanceMode !== 'all') {
                 params.set('attendance_mode', attendanceMode);
             }
-            if (status) params.set('status', status);
+            params.set('status', status);
             if (provinceId) params.set('province_id', String(provinceId));
             if (cityId) params.set('city_id', String(cityId));
             if (search.trim()) params.set('search', search.trim());
             if (sortBy) params.set('sort_by', sortBy);
 
-            const res = await fetch(`/attendees/print-data?${params.toString()}`, {
-                headers: {
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
+            const res = await fetch(
+                `/attendees/print-data?${params.toString()}`,
+                {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
                 },
-            });
+            );
 
             if (!res.ok) {
                 throw new Error(`Server returned ${res.status}`);
@@ -257,7 +317,7 @@ export function PrintAttendeesDialog({
                     called: 0,
                     registered: 0,
                     invited: 0,
-                }
+                },
             );
             if (data.event) {
                 setResolvedEvent(data.event);
@@ -268,7 +328,16 @@ export function PrintAttendeesDialog({
         } finally {
             setLoading(false);
         }
-    }, [eventId, categoryIds, attendanceMode, status, provinceId, cityId, search, sortBy]);
+    }, [
+        eventId,
+        categoryIds,
+        attendanceMode,
+        status,
+        provinceId,
+        cityId,
+        search,
+        sortBy,
+    ]);
 
     // Fetch when modal is open and filters change (debouncing search)
     useEffect(() => {
@@ -282,11 +351,22 @@ export function PrintAttendeesDialog({
     // Grouping computation for rendering and printout
     const groupedAttendees = useMemo(() => {
         if (groupBy === 'none') {
-            return [{ groupKey: 'all', groupTitle: 'All Attendees', list: attendees }];
+            return [
+                {
+                    groupKey: 'all',
+                    groupTitle: 'All Attendees',
+                    list: attendees,
+                },
+            ];
         }
 
         if (groupBy === 'category') {
-            const groups: { groupKey: string; groupTitle: string; list: Attendee[]; order: number }[] = [];
+            const groups: {
+                groupKey: string;
+                groupTitle: string;
+                list: Attendee[];
+                order: number;
+            }[] = [];
             const map = new Map<string, Attendee[]>();
 
             for (const att of attendees) {
@@ -311,7 +391,11 @@ export function PrintAttendeesDialog({
         }
 
         if (groupBy === 'province') {
-            const groups: { groupKey: string; groupTitle: string; list: Attendee[] }[] = [];
+            const groups: {
+                groupKey: string;
+                groupTitle: string;
+                list: Attendee[];
+            }[] = [];
             const map = new Map<string, Attendee[]>();
 
             for (const att of attendees) {
@@ -332,7 +416,9 @@ export function PrintAttendeesDialog({
             return groups;
         }
 
-        return [{ groupKey: 'all', groupTitle: 'All Attendees', list: attendees }];
+        return [
+            { groupKey: 'all', groupTitle: 'All Attendees', list: attendees },
+        ];
     }, [attendees, groupBy, categories]);
 
     // Reference to the preview DOM element
@@ -361,7 +447,8 @@ export function PrintAttendeesDialog({
             return;
         }
 
-        const pageOrientation = orientation === 'landscape' ? 'landscape' : 'portrait';
+        const pageOrientation =
+            orientation === 'landscape' ? 'landscape' : 'portrait';
 
         doc.open();
         doc.write(`
@@ -540,6 +627,22 @@ export function PrintAttendeesDialog({
                         color: #854d0e;
                         border-color: #fef08a;
                     }
+                    .registered-time-log {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        line-height: 1.25;
+                    }
+                    .registered-time-val {
+                        font-weight: 700;
+                        font-size: 10px;
+                        color: #111827;
+                    }
+                    .registered-date-val {
+                        font-size: 9px;
+                        color: #6b7280;
+                        font-weight: 500;
+                    }
                     .signature-line {
                         border-bottom: 1px solid #9ca3af;
                         width: 100%;
@@ -606,20 +709,21 @@ export function PrintAttendeesDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[96vw] xl:max-w-7xl h-[92vh] max-h-[92vh] p-0 flex flex-col gap-0 overflow-hidden bg-neutral-100 dark:bg-neutral-950">
+            <DialogContent className="flex h-[92vh] max-h-[92vh] max-w-[96vw] flex-col gap-0 overflow-hidden bg-neutral-100 p-0 xl:max-w-7xl dark:bg-neutral-950">
                 {/* Modal Top Header Bar */}
-                <DialogHeader className="px-6 py-4 border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 shrink-0">
+                <DialogHeader className="shrink-0 border-b border-neutral-200 bg-white px-6 py-4 dark:border-neutral-800 dark:bg-neutral-900">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-2.5">
                             <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20">
                                 <Printer className="size-5" />
                             </div>
                             <div>
-                                <DialogTitle className="text-base sm:text-lg font-bold">
+                                <DialogTitle className="text-base font-bold sm:text-lg">
                                     Print Attendees & Guest Registry
                                 </DialogTitle>
                                 <DialogDescription className="text-xs text-neutral-500">
-                                    Filter and customize official attendance printouts with pleasing layout
+                                    Filter and customize official attendance
+                                    printouts with pleasing layout
                                 </DialogDescription>
                             </div>
                         </div>
@@ -644,14 +748,25 @@ export function PrintAttendeesDialog({
                                 className="h-8 gap-1.5 text-xs"
                                 title="Refresh report preview"
                             >
-                                <RefreshCw className={cn('size-3.5', loading && 'animate-spin')} />
-                                <span className="hidden sm:inline">Refresh</span>
+                                <RefreshCw
+                                    className={cn(
+                                        'size-3.5',
+                                        loading && 'animate-spin',
+                                    )}
+                                />
+                                <span className="hidden sm:inline">
+                                    Refresh
+                                </span>
                             </Button>
                             <Button
                                 size="sm"
                                 onClick={handlePrint}
-                                disabled={loading || attendees.length === 0 || isPrinting}
-                                className="h-8 gap-1.5 font-bold shadow-xs px-4"
+                                disabled={
+                                    loading ||
+                                    attendees.length === 0 ||
+                                    isPrinting
+                                }
+                                className="h-8 gap-1.5 px-4 font-bold shadow-xs"
                             >
                                 <Printer className="size-4" />
                                 <span>Print Report</span>
@@ -661,18 +776,19 @@ export function PrintAttendeesDialog({
                 </DialogHeader>
 
                 {/* Modal Split View (Filters Sidebar + Live Print Preview) */}
-                <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
+                <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
                     {/* Left Sidebar: Filter Controls & Customization */}
-                    <div className="w-full lg:w-[360px] xl:w-[400px] border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 flex flex-col shrink-0 overflow-y-auto">
-                        <div className="p-4 sm:p-5 flex flex-col gap-4">
+                    <div className="flex w-full shrink-0 flex-col overflow-y-auto border-b border-neutral-200 bg-white lg:w-[360px] lg:border-r lg:border-b-0 xl:w-[400px] dark:border-neutral-800 dark:bg-neutral-900/90">
+                        <div className="flex flex-col gap-4 p-4 sm:p-5">
                             {/* Section Header */}
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wide">
+                                <div className="flex items-center gap-1.5 text-xs font-bold tracking-wide text-neutral-800 uppercase dark:text-neutral-200">
                                     <Filter className="size-3.5 text-primary" />
                                     <span>Registry Data Filters</span>
                                 </div>
                                 <span className="text-[11px] font-medium text-muted-foreground">
-                                    {attendees.length} record{attendees.length === 1 ? '' : 's'} matching
+                                    {attendees.length} record
+                                    {attendees.length === 1 ? '' : 's'} matching
                                 </span>
                             </div>
 
@@ -685,11 +801,16 @@ export function PrintAttendeesDialog({
                                     value={eventId || ''}
                                     onChange={(val) => setEventId(String(val))}
                                     options={[
-                                        { value: '', label: 'All Events (Across Entire System)' },
+                                        {
+                                            value: '',
+                                            label: 'All Events (Across Entire System)',
+                                        },
                                         ...events.map((e) => ({
                                             value: e.id,
                                             label: e.title,
-                                            description: e.event_date ? formatDateFull(e.event_date) : undefined,
+                                            description: e.event_date
+                                                ? formatDateFull(e.event_date)
+                                                : undefined,
                                         })),
                                     ]}
                                     placeholder="Select an Event..."
@@ -701,26 +822,30 @@ export function PrintAttendeesDialog({
                             {/* 2. ATTENDANCE & REPRESENTATIVE FILTER (Core Requirement!) */}
                             <div className="flex flex-col gap-1.5 rounded-lg border border-primary/20 bg-primary/5 p-3 dark:border-primary/30 dark:bg-primary/10">
                                 <div className="flex items-center justify-between">
-                                    <Label className="text-xs font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                                    <Label className="flex items-center gap-1.5 text-xs font-bold text-neutral-900 dark:text-neutral-100">
                                         <Users className="size-3.5 text-primary" />
                                         <span>Attendance & Representative</span>
                                     </Label>
-                                    <Badge variant="outline" className="text-[10px] bg-white dark:bg-neutral-800">
+                                    <Badge
+                                        variant="outline"
+                                        className="bg-white text-[10px] dark:bg-neutral-800"
+                                    >
                                         Required Filter
                                     </Badge>
                                 </div>
                                 <p className="text-[11px] text-neutral-600 dark:text-neutral-400">
-                                    Filter by guest attending personally or with designated representative
+                                    Filter by guest attending personally or with
+                                    designated representative
                                 </p>
                                 <div className="grid grid-cols-1 gap-1.5 pt-1">
                                     <button
                                         type="button"
                                         onClick={() => setAttendanceMode('all')}
                                         className={cn(
-                                            'flex items-center justify-between rounded-md border px-3 py-2 text-xs font-medium transition-all text-left',
+                                            'flex items-center justify-between rounded-md border px-3 py-2 text-left text-xs font-medium transition-all',
                                             attendanceMode === 'all'
-                                                ? 'border-primary bg-primary text-primary-foreground shadow-xs font-bold'
-                                                : 'border-neutral-200 bg-white hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700'
+                                                ? 'border-primary bg-primary font-bold text-primary-foreground shadow-xs'
+                                                : 'border-neutral-200 bg-white hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700',
                                         )}
                                     >
                                         <div className="flex items-center gap-2">
@@ -734,17 +859,22 @@ export function PrintAttendeesDialog({
 
                                     <button
                                         type="button"
-                                        onClick={() => setAttendanceMode('without_rep')}
+                                        onClick={() =>
+                                            setAttendanceMode('without_rep')
+                                        }
                                         className={cn(
-                                            'flex items-center justify-between rounded-md border px-3 py-2 text-xs font-medium transition-all text-left',
+                                            'flex items-center justify-between rounded-md border px-3 py-2 text-left text-xs font-medium transition-all',
                                             attendanceMode === 'without_rep'
-                                                ? 'border-emerald-600 bg-emerald-600 text-white shadow-xs font-bold'
-                                                : 'border-neutral-200 bg-white hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700'
+                                                ? 'border-emerald-600 bg-emerald-600 font-bold text-white shadow-xs'
+                                                : 'border-neutral-200 bg-white hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700',
                                         )}
                                     >
                                         <div className="flex items-center gap-2">
                                             <UserCheck className="size-3.5 text-emerald-500" />
-                                            <span>Attending in Person (Without Representative)</span>
+                                            <span>
+                                                Attending in Person (Without
+                                                Representative)
+                                            </span>
                                         </div>
                                         <span className="text-[10px] opacity-80">
                                             {summary.in_person}
@@ -753,17 +883,21 @@ export function PrintAttendeesDialog({
 
                                     <button
                                         type="button"
-                                        onClick={() => setAttendanceMode('with_rep')}
+                                        onClick={() =>
+                                            setAttendanceMode('with_rep')
+                                        }
                                         className={cn(
-                                            'flex items-center justify-between rounded-md border px-3 py-2 text-xs font-medium transition-all text-left',
+                                            'flex items-center justify-between rounded-md border px-3 py-2 text-left text-xs font-medium transition-all',
                                             attendanceMode === 'with_rep'
-                                                ? 'border-amber-600 bg-amber-600 text-white shadow-xs font-bold'
-                                                : 'border-neutral-200 bg-white hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700'
+                                                ? 'border-amber-600 bg-amber-600 font-bold text-white shadow-xs'
+                                                : 'border-neutral-200 bg-white hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700',
                                         )}
                                     >
                                         <div className="flex items-center gap-2">
                                             <Users className="size-3.5 text-amber-500" />
-                                            <span>Attending with Representative</span>
+                                            <span>
+                                                Attending with Representative
+                                            </span>
                                         </div>
                                         <span className="text-[10px] opacity-80">
                                             {summary.represented}
@@ -782,7 +916,7 @@ export function PrintAttendeesDialog({
                                         <button
                                             type="button"
                                             onClick={() => setCategoryIds([])}
-                                            className="text-[10px] text-primary hover:underline font-medium"
+                                            className="text-[10px] font-medium text-primary hover:underline"
                                         >
                                             Clear all ({categoryIds.length})
                                         </button>
@@ -803,38 +937,43 @@ export function PrintAttendeesDialog({
                                 />
                             </div>
 
-                            {/* 4. Status Filter: Only Invited */}
+                            {/* 4. Status Filter: Only Registered */}
                             <div className="flex flex-col gap-1.5">
                                 <Label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                     Registry Status
                                 </Label>
-                                <div className="flex h-9.5 items-center justify-between rounded-md border border-amber-500/30 bg-amber-500/5 px-3 text-xs dark:border-amber-500/30 dark:bg-amber-500/10">
+                                <div className="flex h-9.5 items-center justify-between rounded-md border border-emerald-500/30 bg-emerald-500/5 px-3 text-xs dark:border-emerald-500/30 dark:bg-emerald-500/10">
                                     <div className="flex items-center gap-2">
-                                        <span className="flex size-2 rounded-full bg-amber-500" />
+                                        <span className="flex size-2 rounded-full bg-emerald-500" />
                                         <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-                                            Invited Status Only
+                                            Registered Status Only
                                         </span>
                                     </div>
                                     <Badge
                                         variant="outline"
-                                        className="border-amber-500/40 bg-amber-500/15 text-amber-800 dark:text-amber-300 text-[10px] font-semibold"
+                                        className="border-emerald-500/40 bg-emerald-500/15 text-[10px] font-semibold text-emerald-800 dark:text-emerald-300"
                                     >
-                                        Status = Invited
+                                        Status = Registered
                                     </Badge>
                                 </div>
                             </div>
 
                             {/* 5. Geographic (Province & City) Filters */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
                                 <div className="flex flex-col gap-1.5">
                                     <Label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                         Province (LGU)
                                     </Label>
                                     <Select2
                                         value={provinceId || ''}
-                                        onChange={(val) => handleProvinceChange(String(val))}
+                                        onChange={(val) =>
+                                            handleProvinceChange(String(val))
+                                        }
                                         options={[
-                                            { value: '', label: 'All Provinces' },
+                                            {
+                                                value: '',
+                                                label: 'All Provinces',
+                                            },
                                             ...provinces.map((p) => ({
                                                 value: p.prov_code,
                                                 label: p.prov_name,
@@ -852,9 +991,14 @@ export function PrintAttendeesDialog({
                                     </Label>
                                     <Select2
                                         value={cityId || ''}
-                                        onChange={(val) => setCityId(String(val))}
+                                        onChange={(val) =>
+                                            setCityId(String(val))
+                                        }
                                         options={[
-                                            { value: '', label: 'All Cities / Municipalities' },
+                                            {
+                                                value: '',
+                                                label: 'All Cities / Municipalities',
+                                            },
                                             ...availableCities.map((c) => ({
                                                 value: c.city_code,
                                                 label: c.city_name,
@@ -873,10 +1017,12 @@ export function PrintAttendeesDialog({
                                     Search Keywords
                                 </Label>
                                 <div className="relative">
-                                    <Search className="absolute left-2.5 top-2.5 size-3.5 text-neutral-400" />
+                                    <Search className="absolute top-2.5 left-2.5 size-3.5 text-neutral-400" />
                                     <Input
                                         value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
+                                        onChange={(e) =>
+                                            setSearch(e.target.value)
+                                        }
                                         placeholder="Search by name, agency, rep..."
                                         className="h-8.5 pl-8 text-xs"
                                     />
@@ -884,7 +1030,7 @@ export function PrintAttendeesDialog({
                                         <button
                                             type="button"
                                             onClick={() => setSearch('')}
-                                            className="absolute right-2.5 top-2.5 text-neutral-400 hover:text-neutral-700"
+                                            className="absolute top-2.5 right-2.5 text-neutral-400 hover:text-neutral-700"
                                         >
                                             <X className="size-3.5" />
                                         </button>
@@ -893,19 +1039,29 @@ export function PrintAttendeesDialog({
                             </div>
 
                             {/* 7. Grouping & Sorting */}
-                            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-neutral-100 dark:border-neutral-800">
+                            <div className="grid grid-cols-2 gap-2 border-t border-neutral-100 pt-1 dark:border-neutral-800">
                                 <div className="flex flex-col gap-1">
                                     <Label className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
                                         Group By
                                     </Label>
                                     <select
                                         value={groupBy}
-                                        onChange={(e) => setGroupBy(e.target.value as GroupMode)}
+                                        onChange={(e) =>
+                                            setGroupBy(
+                                                e.target.value as GroupMode,
+                                            )
+                                        }
                                         className="h-8 rounded-md border border-neutral-300 bg-white px-2 text-xs font-medium text-neutral-800 shadow-2xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
                                     >
-                                        <option value="category">By Category</option>
-                                        <option value="province">By Province</option>
-                                        <option value="none">Continuous (Flat)</option>
+                                        <option value="category">
+                                            By Category
+                                        </option>
+                                        <option value="province">
+                                            By Province
+                                        </option>
+                                        <option value="none">
+                                            Continuous (Flat)
+                                        </option>
                                     </select>
                                 </div>
 
@@ -915,15 +1071,31 @@ export function PrintAttendeesDialog({
                                     </Label>
                                     <select
                                         value={sortBy}
-                                        onChange={(e) => setSortBy(e.target.value as SortMode)}
+                                        onChange={(e) =>
+                                            setSortBy(
+                                                e.target.value as SortMode,
+                                            )
+                                        }
                                         className="h-8 rounded-md border border-neutral-300 bg-white px-2 text-xs font-medium text-neutral-800 shadow-2xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
                                     >
-                                        <option value="protocol">Protocol Priority</option>
-                                        <option value="name_asc">Name (A → Z)</option>
-                                        <option value="name_desc">Name (Z → A)</option>
-                                        <option value="time_asc">Arrival Time (FIFO)</option>
-                                        <option value="time_desc">Registration (Latest)</option>
-                                        <option value="lgu">LGU Location</option>
+                                        <option value="protocol">
+                                            Protocol Priority
+                                        </option>
+                                        <option value="name_asc">
+                                            Name (A → Z)
+                                        </option>
+                                        <option value="name_desc">
+                                            Name (Z → A)
+                                        </option>
+                                        <option value="time_asc">
+                                            Arrival Time (FIFO)
+                                        </option>
+                                        <option value="time_desc">
+                                            Registration (Latest)
+                                        </option>
+                                        <option value="lgu">
+                                            LGU Location
+                                        </option>
                                     </select>
                                 </div>
                             </div>
@@ -932,7 +1104,9 @@ export function PrintAttendeesDialog({
                             <div className="rounded-lg border border-neutral-200 bg-neutral-50/70 p-3 dark:border-neutral-800 dark:bg-neutral-800/40">
                                 <button
                                     type="button"
-                                    onClick={() => setIsOptionsExpanded(!isOptionsExpanded)}
+                                    onClick={() =>
+                                        setIsOptionsExpanded(!isOptionsExpanded)
+                                    }
                                     className="flex w-full items-center justify-between text-xs font-bold text-neutral-800 dark:text-neutral-200"
                                 >
                                     <div className="flex items-center gap-1.5">
@@ -942,39 +1116,49 @@ export function PrintAttendeesDialog({
                                     <ChevronDown
                                         className={cn(
                                             'size-4 text-neutral-400 transition-transform',
-                                            isOptionsExpanded && 'rotate-180'
+                                            isOptionsExpanded && 'rotate-180',
                                         )}
                                     />
                                 </button>
 
                                 {isOptionsExpanded && (
-                                    <div className="mt-3 flex flex-col gap-2.5 pt-2 border-t border-neutral-200 dark:border-neutral-700 text-xs">
+                                    <div className="mt-3 flex flex-col gap-2.5 border-t border-neutral-200 pt-2 text-xs dark:border-neutral-700">
                                         {/* Paper Orientation */}
                                         <div className="flex items-center justify-between">
-                                            <span className="text-neutral-600 dark:text-neutral-400 font-medium">
+                                            <span className="font-medium text-neutral-600 dark:text-neutral-400">
                                                 Page Orientation
                                             </span>
-                                            <div className="flex items-center gap-1 bg-neutral-200/70 dark:bg-neutral-800 rounded p-0.5">
+                                            <div className="flex items-center gap-1 rounded bg-neutral-200/70 p-0.5 dark:bg-neutral-800">
                                                 <button
                                                     type="button"
-                                                    onClick={() => setOrientation('landscape')}
+                                                    onClick={() =>
+                                                        setOrientation(
+                                                            'landscape',
+                                                        )
+                                                    }
                                                     className={cn(
-                                                        'px-2 py-0.5 text-[11px] rounded font-medium transition-colors',
-                                                        orientation === 'landscape'
-                                                            ? 'bg-white dark:bg-neutral-700 shadow-2xs font-bold text-neutral-900 dark:text-white'
-                                                            : 'text-neutral-500'
+                                                        'rounded px-2 py-0.5 text-[11px] font-medium transition-colors',
+                                                        orientation ===
+                                                            'landscape'
+                                                            ? 'bg-white font-bold text-neutral-900 shadow-2xs dark:bg-neutral-700 dark:text-white'
+                                                            : 'text-neutral-500',
                                                     )}
                                                 >
                                                     Landscape
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => setOrientation('portrait')}
+                                                    onClick={() =>
+                                                        setOrientation(
+                                                            'portrait',
+                                                        )
+                                                    }
                                                     className={cn(
-                                                        'px-2 py-0.5 text-[11px] rounded font-medium transition-colors',
-                                                        orientation === 'portrait'
-                                                            ? 'bg-white dark:bg-neutral-700 shadow-2xs font-bold text-neutral-900 dark:text-white'
-                                                            : 'text-neutral-500'
+                                                        'rounded px-2 py-0.5 text-[11px] font-medium transition-colors',
+                                                        orientation ===
+                                                            'portrait'
+                                                            ? 'bg-white font-bold text-neutral-900 shadow-2xs dark:bg-neutral-700 dark:text-white'
+                                                            : 'text-neutral-500',
                                                     )}
                                                 >
                                                     Portrait
@@ -985,16 +1169,19 @@ export function PrintAttendeesDialog({
                                         {/* Signature Column */}
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <span className="font-semibold text-neutral-800 dark:text-neutral-200 block">
+                                                <span className="block font-semibold text-neutral-800 dark:text-neutral-200">
                                                     Include Signature Line
                                                 </span>
                                                 <span className="text-[10px] text-neutral-400">
-                                                    Adds signature space for logbooks
+                                                    Adds signature space for
+                                                    logbooks
                                                 </span>
                                             </div>
                                             <Switch
                                                 checked={showSignatureColumn}
-                                                onCheckedChange={setShowSignatureColumn}
+                                                onCheckedChange={
+                                                    setShowSignatureColumn
+                                                }
                                             />
                                         </div>
 
@@ -1003,17 +1190,22 @@ export function PrintAttendeesDialog({
                                             <span className="text-neutral-700 dark:text-neutral-300">
                                                 Include Office / Agency Name
                                             </span>
-                                            <Switch checked={showAgency} onCheckedChange={setShowAgency} />
+                                            <Switch
+                                                checked={showAgency}
+                                                onCheckedChange={setShowAgency}
+                                            />
                                         </div>
 
                                         {/* Registration Time */}
                                         <div className="flex items-center justify-between">
                                             <span className="text-neutral-700 dark:text-neutral-300">
-                                                Include Registered Time
+                                                Include Registered Time & Date
                                             </span>
                                             <Switch
                                                 checked={showRegisteredTime}
-                                                onCheckedChange={setShowRegisteredTime}
+                                                onCheckedChange={
+                                                    setShowRegisteredTime
+                                                }
                                             />
                                         </div>
 
@@ -1022,7 +1214,10 @@ export function PrintAttendeesDialog({
                                             <span className="text-neutral-700 dark:text-neutral-300">
                                                 Include Registry Status
                                             </span>
-                                            <Switch checked={showStatus} onCheckedChange={setShowStatus} />
+                                            <Switch
+                                                checked={showStatus}
+                                                onCheckedChange={setShowStatus}
+                                            />
                                         </div>
 
                                         {/* Summary Stats Header */}
@@ -1032,7 +1227,9 @@ export function PrintAttendeesDialog({
                                             </span>
                                             <Switch
                                                 checked={showSummaryStats}
-                                                onCheckedChange={setShowSummaryStats}
+                                                onCheckedChange={
+                                                    setShowSummaryStats
+                                                }
                                             />
                                         </div>
 
@@ -1043,39 +1240,53 @@ export function PrintAttendeesDialog({
                                             </span>
                                             <Switch
                                                 checked={showSignatories}
-                                                onCheckedChange={setShowSignatories}
+                                                onCheckedChange={
+                                                    setShowSignatories
+                                                }
                                             />
                                         </div>
 
                                         {showSignatories && (
-                                            <div className="flex flex-col gap-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                                            <div className="flex flex-col gap-2 border-t border-neutral-200 pt-2 dark:border-neutral-700">
                                                 <div className="flex flex-col gap-1">
-                                                    <span className="text-[10px] text-neutral-500 font-medium">
+                                                    <span className="text-[10px] font-medium text-neutral-500">
                                                         Prepared By Name
                                                     </span>
                                                     <Input
                                                         value={preparedByName}
-                                                        onChange={(e) => setPreparedByName(e.target.value)}
+                                                        onChange={(e) =>
+                                                            setPreparedByName(
+                                                                e.target.value,
+                                                            )
+                                                        }
                                                         className="h-7 text-xs"
                                                     />
                                                 </div>
                                                 <div className="flex flex-col gap-1">
-                                                    <span className="text-[10px] text-neutral-500 font-medium">
+                                                    <span className="text-[10px] font-medium text-neutral-500">
                                                         Verified By Name
                                                     </span>
                                                     <Input
                                                         value={verifiedByName}
-                                                        onChange={(e) => setVerifiedByName(e.target.value)}
+                                                        onChange={(e) =>
+                                                            setVerifiedByName(
+                                                                e.target.value,
+                                                            )
+                                                        }
                                                         className="h-7 text-xs"
                                                     />
                                                 </div>
                                                 <div className="flex flex-col gap-1">
-                                                    <span className="text-[10px] text-neutral-500 font-medium">
+                                                    <span className="text-[10px] font-medium text-neutral-500">
                                                         Noted By Name
                                                     </span>
                                                     <Input
                                                         value={notedByName}
-                                                        onChange={(e) => setNotedByName(e.target.value)}
+                                                        onChange={(e) =>
+                                                            setNotedByName(
+                                                                e.target.value,
+                                                            )
+                                                        }
                                                         className="h-7 text-xs"
                                                     />
                                                 </div>
@@ -1088,49 +1299,60 @@ export function PrintAttendeesDialog({
                     </div>
 
                     {/* Right Main Pane: Live Print Result Preview */}
-                    <div className="flex-1 flex flex-col min-w-0 bg-neutral-200/70 dark:bg-neutral-950 overflow-hidden">
+                    <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-neutral-200/70 dark:bg-neutral-950">
                         {/* Preview Top Control Bar */}
-                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200 bg-white px-4 py-2.5 dark:border-neutral-800 dark:bg-neutral-900 shrink-0">
+                        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-neutral-200 bg-white px-4 py-2.5 dark:border-neutral-800 dark:bg-neutral-900">
                             {/* Summary Pills */}
                             <div className="flex flex-wrap items-center gap-2 text-xs">
-                                <Badge variant="secondary" className="font-semibold gap-1">
+                                <Badge
+                                    variant="secondary"
+                                    className="gap-1 font-semibold"
+                                >
                                     <span>Total:</span>
-                                    <span className="text-neutral-900 dark:text-white font-bold">
+                                    <span className="font-bold text-neutral-900 dark:text-white">
                                         {summary.total}
                                     </span>
                                 </Badge>
                                 <Badge
                                     variant="outline"
-                                    className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold gap-1"
+                                    className="gap-1 border-emerald-500/40 bg-emerald-500/10 font-semibold text-emerald-700 dark:text-emerald-300"
                                 >
                                     <UserCheck className="size-3 text-emerald-600" />
                                     <span>In Person: {summary.in_person}</span>
                                 </Badge>
                                 <Badge
                                     variant="outline"
-                                    className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 font-semibold gap-1"
+                                    className="gap-1 border-amber-500/40 bg-amber-500/10 font-semibold text-amber-700 dark:text-amber-300"
                                 >
                                     <Users className="size-3 text-amber-600" />
                                     <span>With Rep: {summary.represented}</span>
                                 </Badge>
                                 <Badge
                                     variant="outline"
-                                    className="border-neutral-300 bg-neutral-50 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 font-semibold gap-1"
+                                    className="gap-1 border-emerald-500/40 bg-emerald-500/10 font-semibold text-emerald-700 dark:text-emerald-300"
                                 >
-                                    <span>Status: Invited Only</span>
+                                    <span>Status: Registered Only</span>
                                 </Badge>
                             </div>
 
                             {/* View Indicators & Print Button */}
                             <div className="flex items-center gap-2">
-                                <span className="text-[11px] text-muted-foreground hidden md:inline">
-                                    Preview Mode: {orientation.toUpperCase()} ({groupBy === 'none' ? 'Continuous' : `Grouped by ${groupBy}`})
+                                <span className="hidden text-[11px] text-muted-foreground md:inline">
+                                    Preview Mode: {orientation.toUpperCase()} (
+                                    {groupBy === 'none'
+                                        ? 'Continuous'
+                                        : `Grouped by ${groupBy}`}
+                                    )
                                 </span>
                                 <Button
                                     size="sm"
                                     onClick={handlePrint}
-                                    disabled={loading || attendees.length === 0 || isPrinting}
-                                    className="gap-1.5 font-bold h-8 px-4 shadow-xs"
+                                    disabled={
+                                        loading ||
+                                        attendees.length === 0 ||
+                                        isPrinting
+                                    }
+                                    className="h-8 gap-1.5 px-4 font-bold shadow-xs"
                                 >
                                     <Printer className="size-3.5" />
                                     <span>Print Report</span>
@@ -1139,21 +1361,24 @@ export function PrintAttendeesDialog({
                         </div>
 
                         {/* Interactive Scrollable Canvas for the Document */}
-                        <div className="flex-1 overflow-auto p-4 sm:p-6 flex justify-center">
+                        <div className="flex flex-1 justify-center overflow-auto p-4 sm:p-6">
                             {loading ? (
-                                <div className="flex flex-col items-center justify-center p-12 text-neutral-500 gap-3">
+                                <div className="flex flex-col items-center justify-center gap-3 p-12 text-neutral-500">
                                     <Spinner className="size-8 text-primary" />
-                                    <p className="text-xs font-semibold">Generating print layout preview...</p>
+                                    <p className="text-xs font-semibold">
+                                        Generating print layout preview...
+                                    </p>
                                 </div>
                             ) : attendees.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center p-12 text-center max-w-md my-auto rounded-xl border border-dashed border-neutral-300 bg-white p-8 dark:border-neutral-800 dark:bg-neutral-900">
-                                    <Users className="size-10 text-neutral-300 mb-3" />
+                                <div className="my-auto flex max-w-md flex-col items-center justify-center rounded-xl border border-dashed border-neutral-300 bg-white p-8 p-12 text-center dark:border-neutral-800 dark:bg-neutral-900">
+                                    <Users className="mb-3 size-10 text-neutral-300" />
                                     <h4 className="text-sm font-bold text-neutral-800 dark:text-neutral-200">
                                         No Attendees Found
                                     </h4>
-                                    <p className="text-xs text-neutral-500 mt-1">
-                                        No attendees match the specified filter criteria. Try adjusting your
-                                        filters or attendance mode.
+                                    <p className="mt-1 text-xs text-neutral-500">
+                                        No attendees match the specified filter
+                                        criteria. Try adjusting your filters or
+                                        attendance mode.
                                     </p>
                                     <Button
                                         variant="outline"
@@ -1171,10 +1396,10 @@ export function PrintAttendeesDialog({
                                     id="printable-attendance-sheet"
                                     ref={previewContainerRef}
                                     className={cn(
-                                        'bg-white text-neutral-900 shadow-md border border-neutral-300 rounded p-6 sm:p-8 text-xs font-sans transition-all',
+                                        'rounded border border-neutral-300 bg-white p-6 font-sans text-xs text-neutral-900 shadow-md transition-all sm:p-8',
                                         orientation === 'landscape'
                                             ? 'w-full max-w-[1100px]'
-                                            : 'w-full max-w-[850px]'
+                                            : 'w-full max-w-[850px]',
                                     )}
                                     style={{
                                         color: '#111827',
@@ -1182,93 +1407,124 @@ export function PrintAttendeesDialog({
                                     }}
                                 >
                                     {/* Document Header */}
-                                    <div className="print-header text-center border-b-2 border-neutral-900 pb-3 mb-4">
-                                        <div className="text-[10px] uppercase tracking-widest text-neutral-500 font-semibold">
+                                    <div className="print-header mb-4 border-b-2 border-neutral-900 pb-3 text-center">
+                                        <div className="text-[10px] font-semibold tracking-widest text-neutral-500 uppercase">
                                             Republic of the Philippines
                                         </div>
-                                        <div className="text-xs font-bold uppercase tracking-wider text-neutral-800 mt-0.5">
-                                            Alayon Stakeholders Attendance & Guest Registry System
+                                        <div className="mt-0.5 text-xs font-bold tracking-wider text-neutral-800 uppercase">
+                                            Alayon Stakeholders Attendance &
+                                            Guest Registry System
                                         </div>
-                                        <h1 className="text-lg sm:text-xl font-extrabold text-neutral-950 mt-1">
-                                            {resolvedEvent?.title || 'Assembly & Stakeholders Meeting'}
+                                        <h1 className="mt-1 text-lg font-extrabold text-neutral-950 sm:text-xl">
+                                            {resolvedEvent?.title ||
+                                                'Assembly & Stakeholders Meeting'}
                                         </h1>
                                         {resolvedEvent?.theme && (
-                                            <p className="text-[11px] italic text-neutral-600 max-w-2xl mx-auto mt-0.5">
-                                                &ldquo;{resolvedEvent.theme}&rdquo;
+                                            <p className="mx-auto mt-0.5 max-w-2xl text-[11px] text-neutral-600 italic">
+                                                &ldquo;{resolvedEvent.theme}
+                                                &rdquo;
                                             </p>
                                         )}
-                                        <div className="text-[10.5px] text-neutral-700 mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5">
+                                        <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5 text-[10.5px] text-neutral-700">
                                             {resolvedEvent?.venue && (
                                                 <span>
-                                                    <strong>Venue:</strong> {resolvedEvent.venue}
+                                                    <strong>Venue:</strong>{' '}
+                                                    {resolvedEvent.venue}
                                                 </span>
                                             )}
                                             {resolvedEvent?.event_date && (
                                                 <span>
-                                                    <strong>Date:</strong> {formatDateFull(resolvedEvent.event_date)}
+                                                    <strong>Date:</strong>{' '}
+                                                    {formatDateFull(
+                                                        resolvedEvent.event_date,
+                                                    )}
                                                 </span>
                                             )}
                                         </div>
                                     </div>
 
                                     {/* Sub-Header / Active Filter Metadata Chip Bar */}
-                                    <div className="print-summary-bar flex flex-wrap items-center justify-between bg-neutral-50 border border-neutral-200 rounded p-2.5 mb-3 text-[11px]">
+                                    <div className="print-summary-bar mb-3 flex flex-wrap items-center justify-between rounded border border-neutral-200 bg-neutral-50 p-2.5 text-[11px]">
                                         <div className="flex flex-wrap items-center gap-1.5">
                                             <span className="font-bold text-neutral-900 uppercase">
                                                 Official Registry Report
                                             </span>
-                                            <span className="text-neutral-400">•</span>
+                                            <span className="text-neutral-400">
+                                                •
+                                            </span>
                                             <span className="text-neutral-600">
-                                                Filter: {attendanceMode === 'all'
+                                                Filter:{' '}
+                                                {attendanceMode === 'all'
                                                     ? 'All Attendees'
-                                                    : attendanceMode === 'without_rep'
+                                                    : attendanceMode ===
+                                                        'without_rep'
                                                       ? 'In Person (Without Representative)'
                                                       : 'Attending with Representative'}
                                             </span>
                                             {categoryIds.length > 0 && (
                                                 <>
-                                                    <span className="text-neutral-400">•</span>
+                                                    <span className="text-neutral-400">
+                                                        •
+                                                    </span>
                                                     <span className="text-neutral-600">
-                                                        Categories ({categoryIds.length}):{' '}
+                                                        Categories (
+                                                        {categoryIds.length}):{' '}
                                                         {categoryIds
-                                                            .map((id) => categories.find((c) => String(c.id) === String(id))?.name || id)
+                                                            .map(
+                                                                (id) =>
+                                                                    categories.find(
+                                                                        (c) =>
+                                                                            String(
+                                                                                c.id,
+                                                                            ) ===
+                                                                            String(
+                                                                                id,
+                                                                            ),
+                                                                    )?.name ||
+                                                                    id,
+                                                            )
                                                             .slice(0, 2)
                                                             .join(', ')}
-                                                        {categoryIds.length > 2 ? ` (+${categoryIds.length - 2} more)` : ''}
+                                                        {categoryIds.length > 2
+                                                            ? ` (+${categoryIds.length - 2} more)`
+                                                            : ''}
                                                     </span>
                                                 </>
                                             )}
-                                            <span className="text-neutral-400">•</span>
+                                            <span className="text-neutral-400">
+                                                •
+                                            </span>
                                             <span className="text-neutral-600">
-                                                Status: Invited Guests Only
+                                                Status: Registered Guests Only
                                             </span>
                                         </div>
-                                        <div className="text-[10.5px] text-neutral-500 font-medium">
-                                            Generated on: {new Date().toLocaleString()}
+                                        <div className="text-[10.5px] font-medium text-neutral-500">
+                                            Generated on:{' '}
+                                            {new Date().toLocaleString()}
                                         </div>
                                     </div>
 
                                     {/* Optional Summary Statistics Box */}
                                     {showSummaryStats && (
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
-                                            <div className="border border-neutral-200 bg-neutral-50/70 p-2 rounded text-center">
-                                                <div className="text-[10px] uppercase font-bold text-neutral-500">
-                                                    Total Invited Guests
+                                        <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                            <div className="rounded border border-neutral-200 bg-neutral-50/70 p-2 text-center">
+                                                <div className="text-[10px] font-bold text-neutral-500 uppercase">
+                                                    Total Registered Guests
                                                 </div>
                                                 <div className="text-base font-extrabold text-neutral-900">
                                                     {summary.total}
                                                 </div>
                                             </div>
-                                            <div className="border border-emerald-200 bg-emerald-50/50 p-2 rounded text-center">
-                                                <div className="text-[10px] uppercase font-bold text-emerald-700">
+                                            <div className="rounded border border-emerald-200 bg-emerald-50/50 p-2 text-center">
+                                                <div className="text-[10px] font-bold text-emerald-700 uppercase">
                                                     In Person (Without Rep)
                                                 </div>
                                                 <div className="text-base font-extrabold text-emerald-800">
                                                     {summary.in_person}
                                                 </div>
                                             </div>
-                                            <div className="border border-amber-200 bg-amber-50/50 p-2 rounded text-center">
-                                                <div className="text-[10px] uppercase font-bold text-amber-700">
+                                            <div className="rounded border border-amber-200 bg-amber-50/50 p-2 text-center">
+                                                <div className="text-[10px] font-bold text-amber-700 uppercase">
                                                     With Representative
                                                 </div>
                                                 <div className="text-base font-extrabold text-amber-800">
@@ -1282,20 +1538,32 @@ export function PrintAttendeesDialog({
                                     {groupedAttendees.map((group, groupIdx) => {
                                         let runningNoOffset = 0;
                                         for (let i = 0; i < groupIdx; i++) {
-                                            runningNoOffset += groupedAttendees[i].list.length;
+                                            runningNoOffset +=
+                                                groupedAttendees[i].list.length;
                                         }
 
                                         return (
-                                            <div key={group.groupKey} className="mb-4">
+                                            <div
+                                                key={group.groupKey}
+                                                className="mb-4"
+                                            >
                                                 {/* Group Title Banner */}
                                                 {groupBy !== 'none' && (
-                                                    <div className="print-section-header bg-neutral-100 border border-neutral-300 border-b-0 px-3 py-1.5 text-[11px] font-bold uppercase text-neutral-800 flex justify-between items-center">
+                                                    <div className="print-section-header flex items-center justify-between border border-b-0 border-neutral-300 bg-neutral-100 px-3 py-1.5 text-[11px] font-bold text-neutral-800 uppercase">
                                                         <span>
-                                                            {groupBy === 'category' ? 'Category: ' : 'Province: '}
+                                                            {groupBy ===
+                                                            'category'
+                                                                ? 'Category: '
+                                                                : 'Province: '}
                                                             {group.groupTitle}
                                                         </span>
                                                         <span className="text-[10px] font-semibold text-neutral-600">
-                                                            {group.list.length} Attendee{group.list.length === 1 ? '' : 's'}
+                                                            {group.list.length}{' '}
+                                                            Attendee
+                                                            {group.list
+                                                                .length === 1
+                                                                ? ''
+                                                                : 's'}
                                                         </span>
                                                     </div>
                                                 )}
@@ -1303,176 +1571,228 @@ export function PrintAttendeesDialog({
                                                 {/* Attendees Table */}
                                                 <table className="print-table w-full border-collapse border border-neutral-300 text-[10.5px]">
                                                     <thead>
-                                                        <tr className="bg-neutral-50 text-neutral-700 uppercase font-bold text-[9.5px]">
-                                                            <th className="border border-neutral-300 p-2 text-center w-8">
+                                                        <tr className="bg-neutral-50 text-[9.5px] font-bold text-neutral-700 uppercase">
+                                                            <th className="w-8 border border-neutral-300 p-2 text-center">
                                                                 #
                                                             </th>
                                                             <th className="border border-neutral-300 p-2">
-                                                                Guest Official Name
+                                                                Guest Official
+                                                                Name
                                                             </th>
                                                             <th className="border border-neutral-300 p-2">
-                                                                Official Designation / Agency
+                                                                Official
+                                                                Designation /
+                                                                Agency
                                                             </th>
                                                             <th className="border border-neutral-300 p-2">
-                                                                Attendance & Representative
-                                                            </th>
-                                                            <th className="border border-neutral-300 p-2">
-                                                                Jurisdiction (LGU)
+                                                                Jurisdiction
+                                                                (LGU)
                                                             </th>
                                                             {showRegisteredTime && (
-                                                                <th className="border border-neutral-300 p-2 w-20 whitespace-nowrap">
-                                                                    Time
+                                                                <th className="w-28 border border-neutral-300 p-2 text-center whitespace-nowrap">
+                                                                    Date & Time
+                                                                    Registered
                                                                 </th>
                                                             )}
                                                             {showStatus && (
-                                                                <th className="border border-neutral-300 p-2 w-20 text-center">
+                                                                <th className="w-20 border border-neutral-300 p-2 text-center">
                                                                     Status
                                                                 </th>
                                                             )}
                                                             {showSignatureColumn && (
-                                                                <th className="border border-neutral-300 p-2 w-32 text-center">
-                                                                    Signature / Remarks
+                                                                <th className="w-32 border border-neutral-300 p-2 text-center">
+                                                                    Signature /
+                                                                    Remarks
                                                                 </th>
                                                             )}
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {group.list.map((attendee, index) => {
-                                                            const itemNumber = runningNoOffset + index + 1;
-                                                            const customField = getCategoryCustomField(attendee.category);
-                                                            const isPersonallyAttending = attendee.is_attending !== false && !attendee.rep_fullname;
+                                                        {group.list.map(
+                                                            (
+                                                                attendee,
+                                                                index,
+                                                            ) => {
+                                                                const itemNumber =
+                                                                    runningNoOffset +
+                                                                    index +
+                                                                    1;
+                                                                const customField =
+                                                                    getCategoryCustomField(
+                                                                        attendee.category,
+                                                                    );
 
-                                                            return (
-                                                                <tr
-                                                                    key={attendee.id}
-                                                                    className={cn(
-                                                                        'break-inside-avoid',
-                                                                        index % 2 === 1 ? 'bg-neutral-50/60' : 'bg-white'
-                                                                    )}
-                                                                >
-                                                                    {/* Row Number */}
-                                                                    <td className="border border-neutral-200 p-2 text-center font-bold text-neutral-500">
-                                                                        {itemNumber}
-                                                                    </td>
-
-                                                                    {/* Guest Official Name */}
-                                                                    <td className="border border-neutral-200 p-2">
-                                                                        <div className="font-bold text-neutral-900 text-xs">
-                                                                            {attendee.prefix_name ? `${attendee.prefix_name} ` : ''}
-                                                                            {attendee.fullname}
-                                                                        </div>
-                                                                        {groupBy !== 'category' && attendee.category && (
-                                                                            <div className="text-[10px] text-neutral-500">
-                                                                                {attendee.category.name}
-                                                                            </div>
+                                                                return (
+                                                                    <tr
+                                                                        key={
+                                                                            attendee.id
+                                                                        }
+                                                                        className={cn(
+                                                                            'break-inside-avoid',
+                                                                            index %
+                                                                                2 ===
+                                                                                1
+                                                                                ? 'bg-neutral-50/60'
+                                                                                : 'bg-white',
                                                                         )}
-                                                                    </td>
+                                                                    >
+                                                                        {/* Row Number */}
+                                                                        <td className="border border-neutral-200 p-2 text-center font-bold text-neutral-500">
+                                                                            {
+                                                                                itemNumber
+                                                                            }
+                                                                        </td>
 
-                                                                    {/* Official Position & Agency */}
-                                                                    <td className="border border-neutral-200 p-2">
-                                                                        <div className="font-semibold text-neutral-800">
-                                                                            {attendee.position || attendee.designation || '—'}
-                                                                        </div>
-                                                                        {showAgency && attendee.agency_name && (
-                                                                            <div className="text-[10px] text-neutral-600 mt-0.5">
-                                                                                {customField?.label ? `${customField.label}: ` : 'Office: '}
-                                                                                <span className="font-medium text-neutral-800">
-                                                                                    {attendee.agency_name}
-                                                                                </span>
+                                                                        {/* Guest Official Name */}
+                                                                        <td className="border border-neutral-200 p-2">
+                                                                            <div className="text-xs font-bold text-neutral-900">
+                                                                                {attendee.prefix_name
+                                                                                    ? `${attendee.prefix_name} `
+                                                                                    : ''}
+                                                                                {
+                                                                                    attendee.fullname
+                                                                                }
                                                                             </div>
-                                                                        )}
-                                                                    </td>
+                                                                            {groupBy !==
+                                                                                'category' &&
+                                                                                attendee.category && (
+                                                                                    <div className="text-[10px] text-neutral-500">
+                                                                                        {
+                                                                                            attendee
+                                                                                                .category
+                                                                                                .name
+                                                                                        }
+                                                                                    </div>
+                                                                                )}
+                                                                        </td>
 
-                                                                    {/* Attendance Mode & Representative */}
-                                                                    <td className="border border-neutral-200 p-2">
-                                                                        {isPersonallyAttending ? (
-                                                                            <div className="flex flex-col gap-0.5">
-                                                                                <span className="badge-in-person inline-flex items-center gap-1 font-semibold text-[9.5px]">
-                                                                                    <UserCheck className="size-2.5" />
-                                                                                    <span>In Person (Self)</span>
-                                                                                </span>
-                                                                                <span className="text-[9.5px] text-neutral-400">
-                                                                                    Without representative
-                                                                                </span>
+                                                                        {/* Official Position & Agency */}
+                                                                        <td className="border border-neutral-200 p-2">
+                                                                            <div className="font-semibold text-neutral-800">
+                                                                                {attendee.position ||
+                                                                                    attendee.designation ||
+                                                                                    '—'}
                                                                             </div>
-                                                                        ) : (
-                                                                            <div className="flex flex-col gap-0.5">
-                                                                                <span className="badge-represented inline-flex items-center gap-1 font-semibold text-[9.5px]">
-                                                                                    <Users className="size-2.5" />
-                                                                                    <span>Via Representative</span>
-                                                                                </span>
-                                                                                {attendee.rep_fullname ? (
-                                                                                    <div className="mt-0.5">
-                                                                                        <div className="font-bold text-neutral-900 text-[10.5px]">
-                                                                                            {attendee.rep_prefix_name ? `${attendee.rep_prefix_name} ` : ''}
-                                                                                            {attendee.rep_fullname}
-                                                                                        </div>
-                                                                                        {attendee.rep_position && (
-                                                                                            <div className="text-[9.5px] text-neutral-500 italic">
-                                                                                                {attendee.rep_position}
-                                                                                            </div>
-                                                                                        )}
+                                                                            {showAgency &&
+                                                                                attendee.agency_name && (
+                                                                                    <div className="mt-0.5 text-[10px] text-neutral-600">
+                                                                                        {customField?.label
+                                                                                            ? `${customField.label}: `
+                                                                                            : 'Office: '}
+                                                                                        <span className="font-medium text-neutral-800">
+                                                                                            {
+                                                                                                attendee.agency_name
+                                                                                            }
+                                                                                        </span>
+                                                                                    </div>
+                                                                                )}
+                                                                        </td>
+
+                                                                        {/* Jurisdiction / LGU */}
+                                                                        <td className="border border-neutral-200 p-2">
+                                                                            <div className="font-semibold text-neutral-900">
+                                                                                {attendee
+                                                                                    .city
+                                                                                    ?.city_name ||
+                                                                                    attendee
+                                                                                        .province
+                                                                                        ?.prov_name ||
+                                                                                    '—'}
+                                                                            </div>
+                                                                            {attendee.city &&
+                                                                                attendee.province && (
+                                                                                    <div className="text-[10px] text-neutral-500">
+                                                                                        {
+                                                                                            attendee
+                                                                                                .province
+                                                                                                .prov_name
+                                                                                        }
+                                                                                    </div>
+                                                                                )}
+                                                                            {attendee.barangay && (
+                                                                                <div className="text-[9px] text-neutral-400">
+                                                                                    Brgy.{' '}
+                                                                                    {
+                                                                                        attendee
+                                                                                            .barangay
+                                                                                            .brgy_name
+                                                                                    }
+                                                                                </div>
+                                                                            )}
+                                                                        </td>
+
+                                                                        {/* Registered Time & Date */}
+                                                                        {showRegisteredTime && (
+                                                                            <td className="border border-neutral-200 p-2 text-center whitespace-nowrap text-neutral-600">
+                                                                                {attendee.registered_at ? (
+                                                                                    <div className="registered-time-log flex flex-col items-center leading-tight">
+                                                                                        <span className="registered-time-val text-[10px] font-bold text-neutral-900 dark:text-neutral-100">
+                                                                                            {formatTime(
+                                                                                                attendee.registered_at,
+                                                                                            )}
+                                                                                        </span>
+                                                                                        <span className="registered-date-val text-[9px] font-medium text-neutral-500">
+                                                                                            {formatRegistrationDate(
+                                                                                                attendee.registered_at,
+                                                                                            )}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                ) : attendee.status ===
+                                                                                      'registered' ||
+                                                                                  attendee.status ===
+                                                                                      'called' ? (
+                                                                                    <div className="registered-time-log flex flex-col items-center leading-tight">
+                                                                                        <span className="registered-time-val text-[10px] font-bold text-neutral-900 dark:text-neutral-100">
+                                                                                            {formatTime(
+                                                                                                attendee.created_at,
+                                                                                            )}
+                                                                                        </span>
+                                                                                        <span className="registered-date-val text-[9px] font-medium text-neutral-500">
+                                                                                            {formatRegistrationDate(
+                                                                                                attendee.created_at,
+                                                                                            )}
+                                                                                        </span>
                                                                                     </div>
                                                                                 ) : (
-                                                                                    <span className="text-[9.5px] text-neutral-400 italic">
-                                                                                        Representative name not specified
+                                                                                    <span className="text-[10px] text-neutral-400 italic">
+                                                                                        —
                                                                                     </span>
                                                                                 )}
-                                                                            </div>
+                                                                            </td>
                                                                         )}
-                                                                    </td>
 
-                                                                    {/* Jurisdiction / LGU */}
-                                                                    <td className="border border-neutral-200 p-2">
-                                                                        <div className="font-semibold text-neutral-900">
-                                                                            {attendee.city?.city_name || attendee.province?.prov_name || '—'}
-                                                                        </div>
-                                                                        {attendee.city && attendee.province && (
-                                                                            <div className="text-[10px] text-neutral-500">
-                                                                                {attendee.province.prov_name}
-                                                                            </div>
+                                                                        {/* Registry Status */}
+                                                                        {showStatus && (
+                                                                            <td className="border border-neutral-200 p-2 text-center">
+                                                                                <span
+                                                                                    className={cn(
+                                                                                        'badge-status',
+                                                                                        attendee.status ===
+                                                                                            'called'
+                                                                                            ? 'badge-status-called'
+                                                                                            : attendee.status ===
+                                                                                                'registered'
+                                                                                              ? 'badge-status-registered'
+                                                                                              : 'badge-status-invited',
+                                                                                    )}
+                                                                                >
+                                                                                    {
+                                                                                        attendee.status
+                                                                                    }
+                                                                                </span>
+                                                                            </td>
                                                                         )}
-                                                                        {attendee.barangay && (
-                                                                            <div className="text-[9px] text-neutral-400">
-                                                                                Brgy. {attendee.barangay.brgy_name}
-                                                                            </div>
+
+                                                                        {/* Signature Column */}
+                                                                        {showSignatureColumn && (
+                                                                            <td className="border border-neutral-200 p-2 text-center align-bottom">
+                                                                                <div className="signature-line mt-1 h-5 w-full min-w-[100px] border-b border-neutral-400" />
+                                                                            </td>
                                                                         )}
-                                                                    </td>
-
-                                                                    {/* Registered Time */}
-                                                                    {showRegisteredTime && (
-                                                                        <td className="border border-neutral-200 p-2 whitespace-nowrap text-neutral-600">
-                                                                            {formatTime(attendee.created_at)}
-                                                                        </td>
-                                                                    )}
-
-                                                                    {/* Registry Status */}
-                                                                    {showStatus && (
-                                                                        <td className="border border-neutral-200 p-2 text-center">
-                                                                            <span
-                                                                                className={cn(
-                                                                                    'badge-status',
-                                                                                    attendee.status === 'called'
-                                                                                        ? 'badge-status-called'
-                                                                                        : attendee.status === 'registered'
-                                                                                          ? 'badge-status-registered'
-                                                                                          : 'badge-status-invited'
-                                                                                )}
-                                                                            >
-                                                                                {attendee.status}
-                                                                            </span>
-                                                                        </td>
-                                                                    )}
-
-                                                                    {/* Signature Column */}
-                                                                    {showSignatureColumn && (
-                                                                        <td className="border border-neutral-200 p-2 text-center align-bottom">
-                                                                            <div className="signature-line border-b border-neutral-400 w-full min-w-[100px] h-5 mt-1" />
-                                                                        </td>
-                                                                    )}
-                                                                </tr>
-                                                            );
-                                                        })}
+                                                                    </tr>
+                                                                );
+                                                            },
+                                                        )}
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -1481,26 +1801,27 @@ export function PrintAttendeesDialog({
 
                                     {/* Signatories Block */}
                                     {showSignatories && (
-                                        <div className="print-signatories flex justify-between gap-6 mt-8 pt-4 page-break-inside-avoid">
+                                        <div className="print-signatories page-break-inside-avoid mt-8 flex justify-between gap-6 pt-4">
                                             <div className="signatory-box flex-1 text-center">
-                                                <div className="text-[10px] text-neutral-500 uppercase tracking-wider mb-8">
+                                                <div className="mb-8 text-[10px] tracking-wider text-neutral-500 uppercase">
                                                     Prepared By:
                                                 </div>
-                                                <div className="border-b border-neutral-800 mx-4" />
-                                                <div className="font-bold text-xs text-neutral-900 mt-1">
+                                                <div className="mx-4 border-b border-neutral-800" />
+                                                <div className="mt-1 text-xs font-bold text-neutral-900">
                                                     {preparedByName}
                                                 </div>
                                                 <div className="text-[9.5px] text-neutral-500">
-                                                    Registration & Attendance Secretariat
+                                                    Registration & Attendance
+                                                    Secretariat
                                                 </div>
                                             </div>
 
                                             <div className="signatory-box flex-1 text-center">
-                                                <div className="text-[10px] text-neutral-500 uppercase tracking-wider mb-8">
+                                                <div className="mb-8 text-[10px] tracking-wider text-neutral-500 uppercase">
                                                     Verified By:
                                                 </div>
-                                                <div className="border-b border-neutral-800 mx-4" />
-                                                <div className="font-bold text-xs text-neutral-900 mt-1">
+                                                <div className="mx-4 border-b border-neutral-800" />
+                                                <div className="mt-1 text-xs font-bold text-neutral-900">
                                                     {verifiedByName}
                                                 </div>
                                                 <div className="text-[9.5px] text-neutral-500">
@@ -1509,27 +1830,31 @@ export function PrintAttendeesDialog({
                                             </div>
 
                                             <div className="signatory-box flex-1 text-center">
-                                                <div className="text-[10px] text-neutral-500 uppercase tracking-wider mb-8">
+                                                <div className="mb-8 text-[10px] tracking-wider text-neutral-500 uppercase">
                                                     Noted By:
                                                 </div>
-                                                <div className="border-b border-neutral-800 mx-4" />
-                                                <div className="font-bold text-xs text-neutral-900 mt-1">
+                                                <div className="mx-4 border-b border-neutral-800" />
+                                                <div className="mt-1 text-xs font-bold text-neutral-900">
                                                     {notedByName}
                                                 </div>
                                                 <div className="text-[9.5px] text-neutral-500">
-                                                    Head of Secretariat / Lead Directorate
+                                                    Head of Secretariat / Lead
+                                                    Directorate
                                                 </div>
                                             </div>
                                         </div>
                                     )}
 
                                     {/* Document Footer */}
-                                    <div className="print-footer flex justify-between items-center border-t border-neutral-200 mt-6 pt-2 text-[9px] text-neutral-400">
+                                    <div className="print-footer mt-6 flex items-center justify-between border-t border-neutral-200 pt-2 text-[9px] text-neutral-400">
                                         <span>
-                                            Alayon Stakeholders Attendance Registry • Official Event Record
+                                            Alayon Stakeholders Attendance
+                                            Registry • Official Event Record
                                         </span>
                                         <span>
-                                            Printed: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
+                                            Printed:{' '}
+                                            {new Date().toLocaleDateString()}{' '}
+                                            {new Date().toLocaleTimeString()}
                                         </span>
                                     </div>
                                 </div>
@@ -1539,8 +1864,8 @@ export function PrintAttendeesDialog({
                 </div>
 
                 {/* Modal Bottom Footer */}
-                <DialogFooter className="px-6 py-3 border-t border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 shrink-0 flex items-center justify-between sm:justify-between">
-                    <div className="text-xs text-neutral-500 font-medium">
+                <DialogFooter className="flex shrink-0 items-center justify-between border-t border-neutral-200 bg-white px-6 py-3 sm:justify-between dark:border-neutral-800 dark:bg-neutral-900">
+                    <div className="text-xs font-medium text-neutral-500">
                         Showing{' '}
                         <span className="font-bold text-neutral-900 dark:text-neutral-100">
                             {attendees.length}
@@ -1564,8 +1889,10 @@ export function PrintAttendeesDialog({
                         <Button
                             size="sm"
                             onClick={handlePrint}
-                            disabled={loading || attendees.length === 0 || isPrinting}
-                            className="h-8.5 px-4 text-xs font-bold gap-1.5 shadow-xs"
+                            disabled={
+                                loading || attendees.length === 0 || isPrinting
+                            }
+                            className="h-8.5 gap-1.5 px-4 text-xs font-bold shadow-xs"
                         >
                             <Printer className="size-4" />
                             <span>Print Registry ({attendees.length})</span>

@@ -1,4 +1,5 @@
 import { createInertiaApp } from '@inertiajs/react';
+import { registerSW } from 'virtual:pwa-register';
 import { MobileGlobalLoader } from '@/components/mobile-global-loader';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -43,3 +44,23 @@ void createInertiaApp({
 
 // This will set light / dark mode on load...
 initializeTheme();
+
+// Register Progressive Web App (PWA) Service Worker with automatic updates
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    registerSW({
+        immediate: true,
+        onNeedRefresh() {
+            // Auto update new service worker cache and reload seamlessly
+            window.location.reload();
+        },
+        onOfflineReady() {
+            console.log('[PWA] ALAYON is ready for offline operation.');
+        },
+        onRegisterError(error) {
+            console.warn(
+                '[PWA] Service Worker registration encountered an issue:',
+                error,
+            );
+        },
+    });
+}

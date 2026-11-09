@@ -15,13 +15,25 @@ export function AppSidebarHeader({
 
     useEffect(() => {
         const handleFsChange = () => {
-            setIsFullscreen(!!(document.fullscreenElement || (document as unknown as { webkitFullscreenElement?: Element }).webkitFullscreenElement));
+            setIsFullscreen(
+                !!(
+                    document.fullscreenElement ||
+                    (
+                        document as unknown as {
+                            webkitFullscreenElement?: Element;
+                        }
+                    ).webkitFullscreenElement
+                ),
+            );
         };
         document.addEventListener('fullscreenchange', handleFsChange);
         document.addEventListener('webkitfullscreenchange', handleFsChange);
         return () => {
             document.removeEventListener('fullscreenchange', handleFsChange);
-            document.removeEventListener('webkitfullscreenchange', handleFsChange);
+            document.removeEventListener(
+                'webkitfullscreenchange',
+                handleFsChange,
+            );
         };
     }, []);
 
@@ -36,7 +48,10 @@ export function AppSidebarHeader({
             webkitFullscreenElement?: Element;
         };
 
-        if (!document.fullscreenElement && !docWithExit.webkitFullscreenElement) {
+        if (
+            !document.fullscreenElement &&
+            !docWithExit.webkitFullscreenElement
+        ) {
             if (doc.requestFullscreen) {
                 doc.requestFullscreen().catch(() => {});
             } else if (doc.webkitRequestFullscreen) {
@@ -59,9 +74,9 @@ export function AppSidebarHeader({
     };
 
     return (
-        <header className="sticky top-0 z-20 flex flex-col justify-end shrink-0 border-b border-sidebar-border/50 bg-background/95 backdrop-blur-md transition-all pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] md:pt-0">
-            <div className="flex h-14 md:h-16 w-full items-center justify-between px-4 md:px-6">
-                <div className="flex items-center gap-2 min-w-0">
+        <header className="sticky top-0 z-20 flex shrink-0 flex-col justify-end border-b border-sidebar-border/50 bg-background/95 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] backdrop-blur-md transition-all md:pt-0">
+            <div className="flex h-14 w-full items-center justify-between px-4 md:h-16 md:px-6">
+                <div className="flex min-w-0 items-center gap-2">
                     <SidebarTrigger className="-ml-1" />
                     <Breadcrumbs breadcrumbs={breadcrumbs} />
                 </div>
@@ -73,9 +88,17 @@ export function AppSidebarHeader({
                         size="icon"
                         type="button"
                         onClick={toggleMobileFullscreen}
-                        className="size-8 rounded-lg border-sidebar-border/60 text-muted-foreground hover:text-foreground shadow-2xs"
-                        title={isFullscreen ? 'Exit Fullscreen' : 'Hide Browser Toolbar (Fullscreen)'}
-                        aria-label={isFullscreen ? 'Exit Fullscreen' : 'Hide Browser Toolbar'}
+                        className="size-8 rounded-lg border-sidebar-border/60 text-muted-foreground shadow-2xs hover:text-foreground"
+                        title={
+                            isFullscreen
+                                ? 'Exit Fullscreen'
+                                : 'Hide Browser Toolbar (Fullscreen)'
+                        }
+                        aria-label={
+                            isFullscreen
+                                ? 'Exit Fullscreen'
+                                : 'Hide Browser Toolbar'
+                        }
                     >
                         {isFullscreen ? (
                             <Minimize2 className="size-3.5" />

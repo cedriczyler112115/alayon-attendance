@@ -817,18 +817,19 @@ test('protocol priority settings can update sequence and allow_call for categori
 test('attendees print-data endpoint returns filtered data with in-person and representative counts', function () {
     $user = User::factory()->create();
 
-    // 1. Personal attendee (without representative) - invited
+    // 1. Personal attendee (without representative) - registered
     $attendeeInPerson = Attendee::create([
         'event_id' => $this->event->id,
         'category_id' => $this->govCategory->id,
         'fullname' => 'Gov. Angel Amante',
         'position' => 'Provincial Governor',
         'province_id' => $this->province->prov_code,
-        'status' => 'invited',
+        'status' => 'registered',
+        'registered_at' => now(),
         'is_attending' => true,
     ]);
 
-    // 2. Represented attendee (with representative) - invited
+    // 2. Represented attendee (with representative) - registered
     $attendeeRepresented = Attendee::create([
         'event_id' => $this->event->id,
         'category_id' => $this->mayorCategory->id,
@@ -836,25 +837,26 @@ test('attendees print-data endpoint returns filtered data with in-person and rep
         'position' => 'City Mayor',
         'province_id' => $this->province->prov_code,
         'city_id' => $this->city->city_code,
-        'status' => 'invited',
+        'status' => 'registered',
+        'registered_at' => now(),
         'is_attending' => false,
         'rep_prefix_name' => 'Atty.',
         'rep_fullname' => 'Pedro Penduko',
         'rep_position' => 'Chief of Staff',
     ]);
 
-    // 3. Attendee with called status (should be EXCLUDED since print-data filters only status = invited)
-    $attendeeCalled = Attendee::create([
+    // 3. Attendee with invited status (should be EXCLUDED since print-data filters only status = registered)
+    $attendeeInvited = Attendee::create([
         'event_id' => $this->event->id,
         'category_id' => $this->pswdoCategory->id,
         'fullname' => 'PSWDO Head Maria Santos',
         'position' => 'PSWDO Head',
         'province_id' => $this->province->prov_code,
-        'status' => 'called',
+        'status' => 'invited',
         'is_attending' => true,
     ]);
 
-    // Test print data - returns only invited attendees
+    // Test print data - returns only registered attendees
     $response = $this->actingAs($user)->getJson(route('attendees.print-data', [
         'event_id' => $this->event->id,
     ]));
@@ -864,7 +866,7 @@ test('attendees print-data endpoint returns filtered data with in-person and rep
         ->assertJsonPath('summary.in_person', 1)
         ->assertJsonPath('summary.represented', 1)
         ->assertJsonPath('summary.called', 0)
-        ->assertJsonPath('summary.invited', 2);
+        ->assertJsonPath('summary.registered', 2);
 
     // Test print data - filter by in_person (without representative)
     $inPersonResponse = $this->actingAs($user)->getJson(route('attendees.print-data', [

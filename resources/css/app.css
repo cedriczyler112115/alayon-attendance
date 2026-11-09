@@ -149,19 +149,23 @@
     }
 
     /* Disable double-tap zoom on interactive elements on mobile */
-    input, select, textarea, button, a {
+    input,
+    select,
+    textarea,
+    button,
+    a {
         touch-action: manipulation;
     }
 }
 
 /* Prevent automatic mobile input zooming in iOS Safari and Android browsers */
 @media (max-width: 768px) {
-    input:not([type="checkbox"]):not([type="radio"]),
+    input:not([type='checkbox']):not([type='radio']),
     select,
     textarea,
-    [data-slot="input"],
-    [data-slot="select-trigger"],
-    [contenteditable="true"] {
+    [data-slot='input'],
+    [data-slot='select-trigger'],
+    [contenteditable='true'] {
         font-size: 16px !important;
     }
 
@@ -204,8 +208,8 @@
         display: none !important;
     }
 
-    [data-slot="dialog-overlay"],
-    [data-slot="sidebar"] {
+    [data-slot='dialog-overlay'],
+    [data-slot='sidebar'] {
         display: none !important;
     }
 

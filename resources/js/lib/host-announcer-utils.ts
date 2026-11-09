@@ -55,13 +55,22 @@ export function loadHostAnnouncerSettings(): HostAnnouncerSettings {
     }
 }
 
-export function saveHostAnnouncerSettings(settings: HostAnnouncerSettings): void {
+export function saveHostAnnouncerSettings(
+    settings: HostAnnouncerSettings,
+): void {
     if (typeof window === 'undefined') return;
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-        window.dispatchEvent(new CustomEvent('alayon:host-settings-updated', { detail: settings }));
+        window.dispatchEvent(
+            new CustomEvent('alayon:host-settings-updated', {
+                detail: settings,
+            }),
+        );
     } catch (e) {
-        console.warn('Failed to save host announcer settings to localStorage', e);
+        console.warn(
+            'Failed to save host announcer settings to localStorage',
+            e,
+        );
     }
 }
 
@@ -71,7 +80,8 @@ export function getAudioContext(): AudioContext | null {
     if (typeof window === 'undefined') return null;
     const AudioCtx =
         window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+            .webkitAudioContext;
     if (!AudioCtx) return null;
 
     if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
@@ -97,7 +107,10 @@ if (typeof window !== 'undefined') {
         unlockAudioContext();
     };
     ['click', 'touchstart', 'pointerdown', 'keydown'].forEach((eventName) => {
-        window.addEventListener(eventName, unlockHandler, { capture: true, passive: true });
+        window.addEventListener(eventName, unlockHandler, {
+            capture: true,
+            passive: true,
+        });
     });
 }
 
@@ -124,7 +137,10 @@ export function playAnnouncementChime(): void {
 
                 osc2.type = 'triangle';
                 osc2.frequency.setValueAtTime(880, now);
-                osc2.frequency.exponentialRampToValueAtTime(1174.66, now + 0.15); // D6
+                osc2.frequency.exponentialRampToValueAtTime(
+                    1174.66,
+                    now + 0.15,
+                ); // D6
 
                 gainNode.gain.setValueAtTime(0.25, now);
                 gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
@@ -143,7 +159,9 @@ export function playAnnouncementChime(): void {
         };
 
         if (ctx.state === 'suspended') {
-            ctx.resume().then(() => playTone()).catch(() => {});
+            ctx.resume()
+                .then(() => playTone())
+                .catch(() => {});
         } else {
             playTone();
         }
@@ -170,7 +188,7 @@ export function playNewRegistrationChime(): void {
                 // 3-note ascending chime: G5 -> C6 -> E6
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(783.99, now); // G5
-                osc.frequency.setValueAtTime(1046.50, now + 0.1); // C6
+                osc.frequency.setValueAtTime(1046.5, now + 0.1); // C6
                 osc.frequency.setValueAtTime(1318.51, now + 0.2); // E6
 
                 gainNode.gain.setValueAtTime(0.25, now);
@@ -187,7 +205,9 @@ export function playNewRegistrationChime(): void {
         };
 
         if (ctx.state === 'suspended') {
-            ctx.resume().then(() => playTone()).catch(() => {});
+            ctx.resume()
+                .then(() => playTone())
+                .catch(() => {});
         } else {
             playTone();
         }
@@ -202,7 +222,10 @@ export function playNewRegistrationChime(): void {
  * - Mayors, CSWDO, LGU Links, 4Ps Coordinators: municipality and province (e.g. "Carmen, Agusan del Norte")
  * - Remaining categories: custom field with value (e.g. "DILG" or "Agency: DILG")
  */
-export function getAttendeeJurisdiction(attendee: Attendee | null | undefined, includeFieldLabel: boolean = false): string {
+export function getAttendeeJurisdiction(
+    attendee: Attendee | null | undefined,
+    includeFieldLabel: boolean = false,
+): string {
     if (!attendee) return '';
 
     const slug = (attendee.category?.slug || '').toLowerCase();
@@ -211,7 +234,11 @@ export function getAttendeeJurisdiction(attendee: Attendee | null | undefined, i
 
     const provinceName = (attendee.province?.prov_name || '').trim();
     const cityName = (attendee.city?.city_name || '').trim();
-    const customVal = (attendee.agency_name || attendee.office_agency || '').trim();
+    const customVal = (
+        attendee.agency_name ||
+        attendee.office_agency ||
+        ''
+    ).trim();
 
     // 1. Governors, PSWDO: display ONLY the province
     const isGovOrPswdo =
@@ -250,7 +277,9 @@ export function getAttendeeJurisdiction(attendee: Attendee | null | undefined, i
     }
 
     // 3. Remaining categories: display the custom fields with value
-    const customConfig = getCategoryCustomField(attendee.category || { id: catId, slug });
+    const customConfig = getCategoryCustomField(
+        attendee.category || { id: catId, slug },
+    );
     if (customVal) {
         if (includeFieldLabel && customConfig?.label) {
             return `${customConfig.label}: ${customVal}`;
@@ -276,7 +305,9 @@ export function getAttendeeJurisdiction(attendee: Attendee | null | undefined, i
  * - "4Ps Coordinator of Tubod, Surigao del Norte"
  * - "ITO-II of DILG"
  */
-export function getAttendeePositionWithJurisdiction(attendee: Attendee | null | undefined): string {
+export function getAttendeePositionWithJurisdiction(
+    attendee: Attendee | null | undefined,
+): string {
     if (!attendee) return '';
 
     const slug = (attendee.category?.slug || '').toLowerCase();
@@ -288,9 +319,11 @@ export function getAttendeePositionWithJurisdiction(attendee: Attendee | null | 
         else if (slug === 'mayors' || catId === 2) position = 'Mayor';
         else if (slug === 'pswdo' || catId === 3) position = 'PSWDO';
         else if (slug === 'cswdo' || catId === 4) position = 'CSWDO';
-        else if (slug === '4ps-coordinators' || slug === '4ps' || catId === 9) position = '4Ps Coordinator';
+        else if (slug === '4ps-coordinators' || slug === '4ps' || catId === 9)
+            position = '4Ps Coordinator';
         else if (slug === 'lgu-links' || catId === 10) position = 'LGU Link';
-        else if (slug === 'lbp-manager' || catId === 6) position = 'Branch Manager';
+        else if (slug === 'lbp-manager' || catId === 6)
+            position = 'Branch Manager';
         else if (slug === 'ngas' || catId === 5) position = 'Official';
         else if (attendee.category?.name) position = attendee.category.name;
         else position = 'Official Guest';
@@ -315,7 +348,7 @@ export function getAttendeePositionWithJurisdiction(attendee: Attendee | null | 
  */
 export function isCategoryAllowedToCall(
     attendee: Attendee | null | undefined,
-    categories?: { id: number; allow_call?: boolean }[]
+    categories?: { id: number; allow_call?: boolean }[],
 ): boolean {
     if (!attendee) return false;
 
@@ -328,7 +361,10 @@ export function isCategoryAllowedToCall(
     }
 
     // Check attendee's nested category relation
-    if (attendee.category && typeof attendee.category.allow_call === 'boolean') {
+    if (
+        attendee.category &&
+        typeof attendee.category.allow_call === 'boolean'
+    ) {
         return attendee.category.allow_call;
     }
 
@@ -343,7 +379,7 @@ export function sortAndFilterAttendees(
     attendees: Attendee[],
     settings: HostAnnouncerSettings,
     searchQuery: string = '',
-    categories?: { id: number; order?: number }[]
+    categories?: { id: number; order?: number }[],
 ): Attendee[] {
     let result = [...attendees];
 
@@ -363,7 +399,8 @@ export function sortAndFilterAttendees(
         result = result.filter((a) => {
             const name = (a.fullname || a.name || '').toLowerCase();
             const pos = (a.position || a.designation || '').toLowerCase();
-            const posWithJurisdiction = getAttendeePositionWithJurisdiction(a).toLowerCase();
+            const posWithJurisdiction =
+                getAttendeePositionWithJurisdiction(a).toLowerCase();
             const agency = (a.agency_name || '').toLowerCase();
             const rep = (a.rep_fullname || '').toLowerCase();
             const prov = (a.province?.prov_name || '').toLowerCase();
@@ -410,8 +447,14 @@ export function sortAndFilterAttendees(
             case 'protocol': {
                 // Category protocol order (1 = highest priority, 999 = fallback)
                 // Prefer authoritative order from categories sequence map, fallback to attendee's nested category, fallback to 999
-                const orderA = categoryOrderMap.get(a.category_id) ?? a.category?.order ?? 999;
-                const orderB = categoryOrderMap.get(b.category_id) ?? b.category?.order ?? 999;
+                const orderA =
+                    categoryOrderMap.get(a.category_id) ??
+                    a.category?.order ??
+                    999;
+                const orderB =
+                    categoryOrderMap.get(b.category_id) ??
+                    b.category?.order ??
+                    999;
                 if (orderA !== orderB) {
                     return orderA - orderB;
                 }
@@ -444,13 +487,17 @@ export function sortAndFilterAttendees(
             case 'name_asc': {
                 const nameA = (a.fullname || a.name || '').trim();
                 const nameB = (b.fullname || b.name || '').trim();
-                const comp = nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+                const comp = nameA.localeCompare(nameB, undefined, {
+                    sensitivity: 'base',
+                });
                 return comp !== 0 ? comp : a.id - b.id;
             }
             case 'name_desc': {
                 const nameA = (a.fullname || a.name || '').trim();
                 const nameB = (b.fullname || b.name || '').trim();
-                const comp = nameB.localeCompare(nameA, undefined, { sensitivity: 'base' });
+                const comp = nameB.localeCompare(nameA, undefined, {
+                    sensitivity: 'base',
+                });
                 return comp !== 0 ? comp : b.id - a.id;
             }
             case 'location': {
@@ -524,4 +571,3 @@ export function getCategoryBadgeClass(slug?: string): string {
             return 'bg-neutral-500/15 text-neutral-700 dark:text-neutral-300 border-neutral-500/30';
     }
 }
-

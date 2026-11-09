@@ -105,7 +105,10 @@ export function MobileGlobalLoader() {
             unbindError();
             unbindCancel();
             window.fetch = originalFetch;
-            window.removeEventListener('alayon:loading:start', handleCustomStart);
+            window.removeEventListener(
+                'alayon:loading:start',
+                handleCustomStart,
+            );
             window.removeEventListener('alayon:loading:stop', handleCustomStop);
             if (timeoutId) {
                 clearTimeout(timeoutId);
@@ -119,14 +122,14 @@ export function MobileGlobalLoader() {
 
     return (
         <div
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/65 backdrop-blur-xs select-none p-4 transition-all duration-200 md:hidden"
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/65 p-4 backdrop-blur-xs transition-all duration-200 select-none md:hidden"
             role="status"
             aria-live="polite"
             aria-label="Loading Alayon 2026"
         >
             <div className="relative flex flex-col items-center justify-center">
                 {/* Round Loader Container */}
-                <div className="relative flex size-40 sm:size-44 items-center justify-center">
+                <div className="relative flex size-40 items-center justify-center sm:size-44">
                     {/* Animated Circular Ring (SVG) */}
                     <svg
                         className="absolute inset-0 size-full -rotate-90 animate-spin"
@@ -170,22 +173,22 @@ export function MobileGlobalLoader() {
                     </svg>
 
                     {/* Secondary subtle pulsing ring */}
-                    <div className="absolute inset-0 size-full rounded-full border-2 border-primary/20 animate-ping opacity-20 pointer-events-none" />
+                    <div className="pointer-events-none absolute inset-0 size-full animate-ping rounded-full border-2 border-primary/20 opacity-20" />
 
                     {/* Center Disc with 'ALAYON 2026' */}
-                    <div className="size-28 sm:size-32 rounded-full bg-neutral-900/95 border border-white/20 shadow-2xl backdrop-blur-md flex flex-col items-center justify-center p-3 text-center z-10">
-                        <span className="text-base sm:text-lg font-black tracking-widest text-white uppercase drop-shadow-md leading-none">
+                    <div className="z-10 flex size-28 flex-col items-center justify-center rounded-full border border-white/20 bg-neutral-900/95 p-3 text-center shadow-2xl backdrop-blur-md sm:size-32">
+                        <span className="text-base leading-none font-black tracking-widest text-white uppercase drop-shadow-md sm:text-lg">
                             ALAYON
                         </span>
-                        <span className="text-xs sm:text-sm font-bold tracking-widest text-amber-400 uppercase drop-shadow-xs mt-1 leading-none">
+                        <span className="mt-1 text-xs leading-none font-bold tracking-widest text-amber-400 uppercase drop-shadow-xs sm:text-sm">
                             2026
                         </span>
                     </div>
                 </div>
 
                 {/* Subtitle status badge */}
-                <div className="mt-4 flex items-center gap-2 rounded-full bg-neutral-900/85 border border-white/15 px-3.5 py-1 text-xs font-medium text-neutral-200 shadow-md">
-                    <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
+                <div className="mt-4 flex items-center gap-2 rounded-full border border-white/15 bg-neutral-900/85 px-3.5 py-1 text-xs font-medium text-neutral-200 shadow-md">
+                    <span className="size-2 animate-pulse rounded-full bg-amber-400" />
                     <span>Processing...</span>
                 </div>
             </div>
@@ -199,8 +202,9 @@ export function MobileGlobalLoader() {
 export function triggerMobileLoader(show: boolean) {
     if (typeof window !== 'undefined') {
         window.dispatchEvent(
-            new CustomEvent(show ? 'alayon:loading:start' : 'alayon:loading:stop')
+            new CustomEvent(
+                show ? 'alayon:loading:start' : 'alayon:loading:stop',
+            ),
         );
     }
 }
-

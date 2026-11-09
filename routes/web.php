@@ -45,6 +45,40 @@ Route::get('api/locations/provinces', [LocationController::class, 'provinces'])-
 Route::get('api/locations/cities', [LocationController::class, 'cities'])->name('locations.cities');
 Route::get('api/locations/barangays', [LocationController::class, 'barangays'])->name('locations.barangays');
 
+// Progressive Web App (PWA) Fallback Routes
+Route::get('sw.js', function () {
+    $swPath = public_path('sw.js');
+    if (! file_exists($swPath)) {
+        $swPath = public_path('build/sw.js');
+    }
+
+    if (file_exists($swPath)) {
+        return response()->file($swPath, [
+            'Content-Type' => 'application/javascript',
+            'Service-Worker-Allowed' => '/',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        ]);
+    }
+
+    abort(404);
+})->name('pwa.sw');
+
+Route::get('manifest.webmanifest', function () {
+    $manifestPath = public_path('manifest.webmanifest');
+    if (! file_exists($manifestPath)) {
+        $manifestPath = public_path('build/manifest.webmanifest');
+    }
+
+    if (file_exists($manifestPath)) {
+        return response()->file($manifestPath, [
+            'Content-Type' => 'application/manifest+json',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        ]);
+    }
+
+    abort(404);
+})->name('pwa.manifest');
+
 // Authenticated Host & Administration Routes
 Route::middleware(['auth'])->group(function () {
     // Mobile Application Menu Page

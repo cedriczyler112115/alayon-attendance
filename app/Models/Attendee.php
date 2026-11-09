@@ -26,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $city_id
  * @property int|null $brgy_id
  * @property int|null $created_by
+ * @property Carbon|null $registered_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read string $name
@@ -35,6 +36,7 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'event_id',
     'status',
+    'registered_at',
     'is_attending',
     'prefix_name',
     'category_id',
@@ -87,6 +89,10 @@ class Attendee extends Model
                 $attendee->status = 'invited';
             }
 
+            if (($attendee->status === 'registered' || $attendee->status === 'called') && empty($attendee->registered_at)) {
+                $attendee->registered_at = now();
+            }
+
             if (empty($attendee->created_by) && auth()->check()) {
                 $attendee->created_by = auth()->id();
             }
@@ -106,6 +112,7 @@ class Attendee extends Model
     {
         return [
             'is_attending' => 'boolean',
+            'registered_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

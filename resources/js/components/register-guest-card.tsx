@@ -1,11 +1,26 @@
 import { Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, Landmark, MapPin, Megaphone, Save, Tag, UserCheck, Users } from 'lucide-react';
+import {
+    ArrowLeft,
+    Landmark,
+    MapPin,
+    Megaphone,
+    Save,
+    Tag,
+    UserCheck,
+    Users,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select2 } from '@/components/ui/select2';
@@ -42,14 +57,7 @@ const COMMON_PREFIXES = [
     'Dr.',
 ];
 
-const REP_PREFIXES = [
-    'Mr.',
-    'Ms.',
-    'Hon.',
-    'Atty.',
-    'Engr.',
-    'Dr.',
-];
+const REP_PREFIXES = ['Mr.', 'Ms.', 'Hon.', 'Atty.', 'Engr.', 'Dr.'];
 
 function getCategoryInfo(cat?: GuestCategory | null) {
     if (!cat) {
@@ -69,11 +77,18 @@ function getCategoryInfo(cat?: GuestCategory | null) {
     const slug = cat.slug?.toLowerCase() || '';
     const name = cat.name?.toLowerCase() || '';
 
-    const isGov = slug === 'governors' || slug === 'governor' || name.includes('governor');
-    const isMayor = slug === 'mayors' || slug === 'mayor' || name.includes('mayor');
+    const isGov =
+        slug === 'governors' ||
+        slug === 'governor' ||
+        name.includes('governor');
+    const isMayor =
+        slug === 'mayors' || slug === 'mayor' || name.includes('mayor');
     const isPswdo = slug === 'pswdo' || name.includes('pswdo');
     const isCswdo = slug === 'cswdo' || name.includes('cswdo');
-    const isLguLink = slug === 'lgu-links' || slug === 'lgu_links' || name.includes('lgu link');
+    const isLguLink =
+        slug === 'lgu-links' ||
+        slug === 'lgu_links' ||
+        name.includes('lgu link');
 
     const isGovOrPswdo = isGov || isPswdo;
     const isCityRequired = isMayor || isCswdo || isLguLink;
@@ -104,11 +119,21 @@ export function RegisterGuestCard({
     className,
 }: Props) {
     const initialEventId = currentEvent?.id || events[0]?.id || 1;
-    const [provincesList, setProvincesList] = useState<ProvinceItem[]>(initialProvinces);
+    const [provincesList, setProvincesList] =
+        useState<ProvinceItem[]>(initialProvinces);
     const [allCities, setAllCities] = useState<CityItem[]>(initialCities);
     const [isLoadingCities, setIsLoadingCities] = useState(false);
 
-    const { data, setData, post, processing, errors, reset, clearErrors, setError } = useForm({
+    const {
+        data,
+        setData,
+        post,
+        processing,
+        errors,
+        reset,
+        clearErrors,
+        setError,
+    } = useForm({
         event_id: initialEventId,
         status: 'registered',
         is_attending: false,
@@ -158,7 +183,9 @@ export function RegisterGuestCard({
 
     // Filter to Region 16 (Caraga Region) provinces
     const region16Provinces = useMemo(() => {
-        return provincesList.filter((p) => !p.region_code || Number(p.region_code) === 16);
+        return provincesList.filter(
+            (p) => !p.region_code || Number(p.region_code) === 16,
+        );
     }, [provincesList]);
 
     // Map for fast province name lookup
@@ -186,24 +213,36 @@ export function RegisterGuestCard({
         if (!data.province_id) {
             return allCities;
         }
-        return allCities.filter((c) => c.prov_code === Number(data.province_id));
+        return allCities.filter(
+            (c) => c.prov_code === Number(data.province_id),
+        );
     }, [allCities, data.province_id]);
 
     // Currently selected city object
     const selectedCityObj = useMemo(() => {
         if (!data.city_id) return null;
-        return allCities.find((c) => c.city_code === Number(data.city_id)) || null;
+        return (
+            allCities.find((c) => c.city_code === Number(data.city_id)) || null
+        );
     }, [allCities, data.city_id]);
 
     // Check if the selected city has a duplicate name across provinces
     const isSelectedCityDuplicate = useMemo(() => {
         if (!selectedCityObj) return false;
-        return (duplicateCityNames.get(selectedCityObj.city_name.trim().toLowerCase()) || 0) > 1;
+        return (
+            (duplicateCityNames.get(
+                selectedCityObj.city_name.trim().toLowerCase(),
+            ) || 0) > 1
+        );
     }, [selectedCityObj, duplicateCityNames]);
 
     const selectedCityProvinceName = useMemo(() => {
         if (!selectedCityObj) return '';
-        return selectedCityObj.province?.prov_name || provinceMap.get(selectedCityObj.prov_code) || '';
+        return (
+            selectedCityObj.province?.prov_name ||
+            provinceMap.get(selectedCityObj.prov_code) ||
+            ''
+        );
     }, [selectedCityObj, provinceMap]);
 
     // When a City is selected: automatically select the corresponding province
@@ -218,7 +257,9 @@ export function RegisterGuestCard({
                 return { ...prev, city_id: '' };
             }
             const chosenCity = allCities.find((c) => c.city_code === code);
-            const autoProvinceId = chosenCity ? chosenCity.prov_code : prev.province_id;
+            const autoProvinceId = chosenCity
+                ? chosenCity.prov_code
+                : prev.province_id;
             return {
                 ...prev,
                 city_id: code,
@@ -232,8 +273,11 @@ export function RegisterGuestCard({
         const code = provCode ? Number(provCode) : '';
         clearErrors('province_id');
         setData((prev) => {
-            const currentCity = allCities.find((c) => c.city_code === Number(prev.city_id));
-            const shouldClearCity = !code || (currentCity && currentCity.prov_code !== code);
+            const currentCity = allCities.find(
+                (c) => c.city_code === Number(prev.city_id),
+            );
+            const shouldClearCity =
+                !code || (currentCity && currentCity.prov_code !== code);
 
             return {
                 ...prev,
@@ -243,9 +287,17 @@ export function RegisterGuestCard({
         });
     };
 
-    const selectedCategory = categories.find((c) => c.id === Number(data.category_id));
-    const categoryInfo = useMemo(() => getCategoryInfo(selectedCategory), [selectedCategory]);
-    const customField = useMemo(() => getCategoryCustomField(selectedCategory), [selectedCategory]);
+    const selectedCategory = categories.find(
+        (c) => c.id === Number(data.category_id),
+    );
+    const categoryInfo = useMemo(
+        () => getCategoryInfo(selectedCategory),
+        [selectedCategory],
+    );
+    const customField = useMemo(
+        () => getCategoryCustomField(selectedCategory),
+        [selectedCategory],
+    );
 
     const handleCategoryChange = (catId: number) => {
         clearErrors('province_id', 'city_id');
@@ -276,7 +328,11 @@ export function RegisterGuestCard({
         } else {
             // Category is not Governor or Mayors -> Official Position is empty
             position = '';
-            if (prefix_name === 'Hon' || prefix_name === 'Hon.' || prefix_name === 'Honorable') {
+            if (
+                prefix_name === 'Hon' ||
+                prefix_name === 'Hon.' ||
+                prefix_name === 'Honorable'
+            ) {
                 prefix_name = '';
             }
         }
@@ -318,7 +374,10 @@ export function RegisterGuestCard({
 
         let hasError = false;
         if (!data.position?.trim()) {
-            setError('position', 'The official position / designation field is required.');
+            setError(
+                'position',
+                'The official position / designation field is required.',
+            );
             hasError = true;
         }
         if (categoryInfo.isProvinceRequired && !data.province_id) {
@@ -338,7 +397,9 @@ export function RegisterGuestCard({
         post('/attendance', {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success(`Guest attendance registered successfully: ${data.fullname}`);
+                toast.success(
+                    `Guest attendance registered successfully: ${data.fullname}`,
+                );
                 handleReset();
                 onSuccess?.();
             },
@@ -358,7 +419,12 @@ export function RegisterGuestCard({
         return categories.map((cat) => ({
             value: cat.id,
             label: cat.name,
-            badge: cat.scope === 'province' ? 'Province Level' : cat.scope === 'municipality' ? 'Per City/Mun' : 'General',
+            badge:
+                cat.scope === 'province'
+                    ? 'Province Level'
+                    : cat.scope === 'municipality'
+                      ? 'Per City/Mun'
+                      : 'General',
         }));
     }, [categories]);
 
@@ -384,20 +450,28 @@ export function RegisterGuestCard({
     // City options: when name is shared across provinces or when browsing all cities, put province name beside it
     const cityOptions = useMemo(() => {
         return displayedCities.map((cty) => {
-            const isDuplicate = (duplicateCityNames.get(cty.city_name.trim().toLowerCase()) || 0) > 1;
-            const provName = cty.province?.prov_name || provinceMap.get(cty.prov_code) || '';
+            const isDuplicate =
+                (duplicateCityNames.get(cty.city_name.trim().toLowerCase()) ||
+                    0) > 1;
+            const provName =
+                cty.province?.prov_name || provinceMap.get(cty.prov_code) || '';
 
             return {
                 value: cty.city_code,
                 label: cty.city_name,
-                badge: (isDuplicate || !data.province_id) && provName ? provName : undefined,
+                badge:
+                    (isDuplicate || !data.province_id) && provName
+                        ? provName
+                        : undefined,
                 description: provName ? `Province: ${provName}` : undefined,
             };
         });
     }, [displayedCities, duplicateCityNames, provinceMap, data.province_id]);
 
     return (
-        <Card className={`overflow-visible border border-neutral-200/90 shadow-sm dark:border-neutral-800 ${className || ''}`}>
+        <Card
+            className={`overflow-visible border border-neutral-200/90 shadow-sm dark:border-neutral-800 ${className || ''}`}
+        >
             <CardHeader className="border-b border-neutral-100 bg-neutral-50/50 pb-4 dark:border-neutral-800/80 dark:bg-neutral-900/50">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3">
@@ -409,17 +483,27 @@ export function RegisterGuestCard({
                                 <CardTitle className="text-base font-bold sm:text-lg">
                                     Register Guest Attendance
                                 </CardTitle>
-                                <Badge variant="outline" className="border-primary/30 text-primary text-[10px] font-semibold">
+                                <Badge
+                                    variant="outline"
+                                    className="border-primary/30 text-[10px] font-semibold text-primary"
+                                >
                                     Region 16 (Caraga)
                                 </Badge>
                                 {currentEvent && (
-                                    <Badge variant="secondary" className="hidden text-[10px] font-normal sm:inline-flex">
-                                        Event: <strong className="ml-1 font-semibold">{currentEvent.title}</strong>
+                                    <Badge
+                                        variant="secondary"
+                                        className="hidden text-[10px] font-normal sm:inline-flex"
+                                    >
+                                        Event:{' '}
+                                        <strong className="ml-1 font-semibold">
+                                            {currentEvent.title}
+                                        </strong>
                                     </Badge>
                                 )}
                             </div>
                             <CardDescription className="text-xs">
-                                Simple registration for arriving guests, officials, and regional dignitaries
+                                Simple registration for arriving guests,
+                                officials, and regional dignitaries
                             </CardDescription>
                         </div>
                     </div>
@@ -439,7 +523,12 @@ export function RegisterGuestCard({
                                 <span>Back to Attendees List</span>
                             </Button>
                         )}
-                        <Button asChild variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+                        <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs"
+                        >
                             <Link href="/host">
                                 <Megaphone className="size-3.5" />
                                 <span>Host Announcer Console</span>
@@ -460,20 +549,30 @@ export function RegisterGuestCard({
                 </div>
             </CardHeader>
 
-            <CardContent className="p-4 sm:p-6 overflow-visible">
-                <form id="card_register_form" onSubmit={handleSubmit} className="space-y-4">
+            <CardContent className="overflow-visible p-4 sm:p-6">
+                <form
+                    id="card_register_form"
+                    onSubmit={handleSubmit}
+                    className="space-y-4"
+                >
                     {/* Primary Guest Details Row */}
                     <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-12 lg:gap-4">
                         {/* Event Selector (if multiple events exist) */}
                         {events.length > 1 && (
                             <div className="col-span-1 sm:col-span-2 lg:col-span-12">
-                                <Label htmlFor="card_event_id" className="text-xs font-semibold">
-                                    Target Event <span className="text-red-500">*</span>
+                                <Label
+                                    htmlFor="card_event_id"
+                                    className="text-xs font-semibold"
+                                >
+                                    Target Event{' '}
+                                    <span className="text-red-500">*</span>
                                 </Label>
                                 <Select2
                                     id="card_event_id"
                                     value={data.event_id}
-                                    onChange={(val) => setData('event_id', Number(val))}
+                                    onChange={(val) =>
+                                        setData('event_id', Number(val))
+                                    }
                                     options={eventOptions}
                                     placeholder="Select event..."
                                     searchPlaceholder="Search event..."
@@ -486,13 +585,18 @@ export function RegisterGuestCard({
 
                         {/* Category */}
                         <div className="col-span-1 sm:col-span-1 lg:col-span-4">
-                            <Label htmlFor="card_category_id" className="text-xs font-semibold">
+                            <Label
+                                htmlFor="card_category_id"
+                                className="text-xs font-semibold"
+                            >
                                 Category <span className="text-red-500">*</span>
                             </Label>
                             <Select2
                                 id="card_category_id"
                                 value={data.category_id}
-                                onChange={(val) => handleCategoryChange(Number(val))}
+                                onChange={(val) =>
+                                    handleCategoryChange(Number(val))
+                                }
                                 options={categoryOptions}
                                 placeholder="Select category..."
                                 searchPlaceholder="Search category (e.g. Mayors, Governors)..."
@@ -504,13 +608,18 @@ export function RegisterGuestCard({
 
                         {/* Prefix */}
                         <div className="col-span-1 sm:col-span-1 lg:col-span-3">
-                            <Label htmlFor="card_prefix_name" className="text-xs font-semibold whitespace-nowrap">
+                            <Label
+                                htmlFor="card_prefix_name"
+                                className="text-xs font-semibold whitespace-nowrap"
+                            >
                                 Prefix (Mr. Ms, Hon.)
                             </Label>
                             <Select2
                                 id="card_prefix_name"
                                 value={data.prefix_name}
-                                onChange={(val) => setData('prefix_name', String(val))}
+                                onChange={(val) =>
+                                    setData('prefix_name', String(val))
+                                }
                                 options={prefixOptions}
                                 placeholder="Prefix..."
                                 searchPlaceholder="Search prefix..."
@@ -522,25 +631,40 @@ export function RegisterGuestCard({
 
                         {/* Full Name */}
                         <div className="col-span-1 sm:col-span-2 lg:col-span-5">
-                            <Label htmlFor="card_fullname" className="text-xs font-semibold">
-                                Full Name <span className="text-red-500">*</span>
+                            <Label
+                                htmlFor="card_fullname"
+                                className="text-xs font-semibold"
+                            >
+                                Full Name{' '}
+                                <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="card_fullname"
                                 type="text"
                                 required
                                 value={data.fullname}
-                                onChange={(e) => setData('fullname', e.target.value)}
+                                onChange={(e) =>
+                                    setData('fullname', e.target.value)
+                                }
                                 placeholder="e.g. Juan P. Dela Cruz"
-                                className="mt-1 h-9.5 rounded-lg border-neutral-300 dark:border-neutral-700 text-xs sm:text-sm"
+                                className="mt-1 h-9.5 rounded-lg border-neutral-300 text-xs sm:text-sm dark:border-neutral-700"
                             />
                             <InputError message={errors.fullname} />
                         </div>
 
                         {/* Official Position (Row 2 on desktop, beside Custom Field & Status) */}
-                        <div className={cn('col-span-1 sm:col-span-1', customField ? 'lg:col-span-5' : 'lg:col-span-8')}>
-                            <Label htmlFor="card_position" className="text-xs font-semibold">
-                                Official Position / Designation <span className="text-red-500">*</span>
+                        <div
+                            className={cn(
+                                'col-span-1 sm:col-span-1',
+                                customField ? 'lg:col-span-5' : 'lg:col-span-8',
+                            )}
+                        >
+                            <Label
+                                htmlFor="card_position"
+                                className="text-xs font-semibold"
+                            >
+                                Official Position / Designation{' '}
+                                <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="card_position"
@@ -557,7 +681,7 @@ export function RegisterGuestCard({
                                           ? 'Municipal Mayor'
                                           : 'Official position / designation (Required)'
                                 }
-                                className="mt-1 h-9.5 rounded-lg border-neutral-300 dark:border-neutral-700 text-xs sm:text-sm"
+                                className="mt-1 h-9.5 rounded-lg border-neutral-300 text-xs sm:text-sm dark:border-neutral-700"
                             />
                             <InputError message={errors.position} />
                         </div>
@@ -565,32 +689,50 @@ export function RegisterGuestCard({
                         {/* Additional Category-Specific Field (Agency / Branch Name / CSO Name / School/Health Name / Division Name) */}
                         {customField && (
                             <div className="col-span-1 sm:col-span-1 lg:col-span-4">
-                                <Label htmlFor="card_agency_name" className="text-xs font-semibold whitespace-nowrap">
+                                <Label
+                                    htmlFor="card_agency_name"
+                                    className="text-xs font-semibold whitespace-nowrap"
+                                >
                                     {customField.label}
                                 </Label>
                                 <Input
                                     id="card_agency_name"
                                     type="text"
                                     value={data.agency_name}
-                                    onChange={(e) => setData('agency_name', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('agency_name', e.target.value)
+                                    }
                                     placeholder={customField.placeholder}
-                                    className="mt-1 h-9.5 rounded-lg border-neutral-300 dark:border-neutral-700 text-xs sm:text-sm"
+                                    className="mt-1 h-9.5 rounded-lg border-neutral-300 text-xs sm:text-sm dark:border-neutral-700"
                                 />
                                 <InputError message={errors.agency_name} />
                             </div>
                         )}
 
                         {/* Status (Default: Invited, Row 2 on desktop beside Official Position & Custom Field) */}
-                        <div className={cn('col-span-1 sm:col-span-1', customField ? 'lg:col-span-3' : 'lg:col-span-4')}>
-                            <Label htmlFor="card_status" className="text-xs font-semibold">
+                        <div
+                            className={cn(
+                                'col-span-1 sm:col-span-1',
+                                customField ? 'lg:col-span-3' : 'lg:col-span-4',
+                            )}
+                        >
+                            <Label
+                                htmlFor="card_status"
+                                className="text-xs font-semibold"
+                            >
                                 Status
                             </Label>
                             <Select2
                                 id="card_status"
                                 value={data.status}
-                                onChange={(val) => setData('status', String(val))}
+                                onChange={(val) =>
+                                    setData('status', String(val))
+                                }
                                 options={[
-                                    { value: 'registered', label: 'Registered' },
+                                    {
+                                        value: 'registered',
+                                        label: 'Registered',
+                                    },
                                     { value: 'called', label: 'Called' },
                                 ]}
                                 placeholder="Select status..."
@@ -603,23 +745,28 @@ export function RegisterGuestCard({
                     </div>
 
                     {/* Confirmation to Attend Switch Section */}
-                    <div className="rounded-xl border border-neutral-200 bg-white p-3.5 sm:p-4 shadow-2xs dark:border-neutral-800 dark:bg-neutral-900/60 overflow-visible">
+                    <div className="overflow-visible rounded-xl border border-neutral-200 bg-white p-3.5 shadow-2xs sm:p-4 dark:border-neutral-800 dark:bg-neutral-900/60">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="space-y-0.5">
                                 <div className="flex items-center gap-2">
-                                    <Label htmlFor="card_is_attending" className="text-xs font-bold text-neutral-800 dark:text-neutral-200 sm:text-sm">
+                                    <Label
+                                        htmlFor="card_is_attending"
+                                        className="text-xs font-bold text-neutral-800 sm:text-sm dark:text-neutral-200"
+                                    >
                                         Confirmation: Attending in Person?
                                     </Label>
                                     <Badge
                                         variant="outline"
                                         className={cn(
-                                            'text-[10px] font-semibold px-2 py-0.5',
+                                            'px-2 py-0.5 text-[10px] font-semibold',
                                             data.is_attending
                                                 ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                                                : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                                                : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300',
                                         )}
                                     >
-                                        {data.is_attending ? 'Yes — Confirmed to Attend' : 'No — Sending Representative'}
+                                        {data.is_attending
+                                            ? 'Yes — Confirmed to Attend'
+                                            : 'No — Sending Representative'}
                                     </Badge>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground sm:text-xs">
@@ -629,17 +776,33 @@ export function RegisterGuestCard({
                                 </p>
                             </div>
 
-                            <div className="flex items-center gap-2.5 self-start rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 dark:border-neutral-800 dark:bg-neutral-900 sm:self-center">
-                                <span className={cn('text-xs font-bold', !data.is_attending ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground')}>
+                            <div className="flex items-center gap-2.5 self-start rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 sm:self-center dark:border-neutral-800 dark:bg-neutral-900">
+                                <span
+                                    className={cn(
+                                        'text-xs font-bold',
+                                        !data.is_attending
+                                            ? 'text-amber-600 dark:text-amber-400'
+                                            : 'text-muted-foreground',
+                                    )}
+                                >
                                     NO
                                 </span>
                                 <Switch
                                     id="card_is_attending"
                                     checked={data.is_attending}
-                                    onCheckedChange={(checked) => setData('is_attending', checked)}
+                                    onCheckedChange={(checked) =>
+                                        setData('is_attending', checked)
+                                    }
                                     aria-label="Attendance confirmation"
                                 />
-                                <span className={cn('text-xs font-bold', data.is_attending ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground')}>
+                                <span
+                                    className={cn(
+                                        'text-xs font-bold',
+                                        data.is_attending
+                                            ? 'text-emerald-600 dark:text-emerald-400'
+                                            : 'text-muted-foreground',
+                                    )}
+                                >
                                     YES
                                 </span>
                             </div>
@@ -651,63 +814,99 @@ export function RegisterGuestCard({
                                 <div className="mb-3 flex items-center justify-between">
                                     <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
                                         <Users className="size-3.5 text-amber-600 dark:text-amber-400" />
-                                        <span>Authorized Representative Details</span>
+                                        <span>
+                                            Authorized Representative Details
+                                        </span>
                                     </div>
-                                    <span className="text-[10px] text-amber-700 dark:text-amber-400 font-medium">
-                                        Please provide the representative attending on behalf of the invitee
+                                    <span className="text-[10px] font-medium text-amber-700 dark:text-amber-400">
+                                        Please provide the representative
+                                        attending on behalf of the invitee
                                     </span>
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-12">
                                     {/* Representative Prefix */}
                                     <div className="sm:col-span-3">
-                                        <Label htmlFor="card_rep_prefix_name" className="text-xs font-semibold whitespace-nowrap">
+                                        <Label
+                                            htmlFor="card_rep_prefix_name"
+                                            className="text-xs font-semibold whitespace-nowrap"
+                                        >
                                             Prefix (Mr. Ms, Hon.)
                                         </Label>
                                         <Select2
                                             id="card_rep_prefix_name"
                                             value={data.rep_prefix_name}
-                                            onChange={(val) => setData('rep_prefix_name', String(val))}
+                                            onChange={(val) =>
+                                                setData(
+                                                    'rep_prefix_name',
+                                                    String(val),
+                                                )
+                                            }
                                             options={repPrefixOptions}
                                             placeholder="Prefix..."
                                             searchPlaceholder="Prefix..."
                                             className="mt-1"
                                             error={errors.rep_prefix_name}
                                         />
-                                        <InputError message={errors.rep_prefix_name} />
+                                        <InputError
+                                            message={errors.rep_prefix_name}
+                                        />
                                     </div>
 
                                     {/* Representative Full Name */}
                                     <div className="sm:col-span-5">
-                                        <Label htmlFor="card_rep_fullname" className="text-xs font-semibold">
-                                            Representative Name <span className="text-red-500">*</span>
+                                        <Label
+                                            htmlFor="card_rep_fullname"
+                                            className="text-xs font-semibold"
+                                        >
+                                            Representative Name{' '}
+                                            <span className="text-red-500">
+                                                *
+                                            </span>
                                         </Label>
                                         <Input
                                             id="card_rep_fullname"
                                             type="text"
                                             required={!data.is_attending}
                                             value={data.rep_fullname}
-                                            onChange={(e) => setData('rep_fullname', e.target.value)}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'rep_fullname',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="e.g. Maria Santos"
                                             className="mt-1 h-9.5 rounded-lg border-neutral-300 bg-white text-xs sm:text-sm dark:border-neutral-700 dark:bg-neutral-900"
                                         />
-                                        <InputError message={errors.rep_fullname} />
+                                        <InputError
+                                            message={errors.rep_fullname}
+                                        />
                                     </div>
 
                                     {/* Representative Position */}
                                     <div className="sm:col-span-4">
-                                        <Label htmlFor="card_rep_position" className="text-xs font-semibold">
+                                        <Label
+                                            htmlFor="card_rep_position"
+                                            className="text-xs font-semibold"
+                                        >
                                             Representative Position
                                         </Label>
                                         <Input
                                             id="card_rep_position"
                                             type="text"
                                             value={data.rep_position}
-                                            onChange={(e) => setData('rep_position', e.target.value)}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'rep_position',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="e.g. Chief of Staff / Executive Assistant"
                                             className="mt-1 h-9.5 rounded-lg border-neutral-300 bg-white text-xs sm:text-sm dark:border-neutral-700 dark:bg-neutral-900"
                                         />
-                                        <InputError message={errors.rep_position} />
+                                        <InputError
+                                            message={errors.rep_position}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -715,7 +914,7 @@ export function RegisterGuestCard({
                     </div>
 
                     {/* Location Jurisdiction Box (Province & City/Municipality - Barangay removed) */}
-                    <div className="rounded-xl border border-neutral-200 bg-neutral-50/70 p-3.5 sm:p-4 dark:border-neutral-800 dark:bg-neutral-900/40 overflow-visible">
+                    <div className="overflow-visible rounded-xl border border-neutral-200 bg-neutral-50/70 p-3.5 sm:p-4 dark:border-neutral-800 dark:bg-neutral-900/40">
                         <div className="mb-3 flex items-center justify-between">
                             <div className="flex items-center gap-2 text-xs font-semibold text-neutral-800 dark:text-neutral-200">
                                 <MapPin className="size-3.5 text-primary" />
@@ -733,8 +932,14 @@ export function RegisterGuestCard({
                         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                             {/* Province Select2 */}
                             <div>
-                                <Label htmlFor="card_province_id" className="text-xs font-semibold">
-                                    Province {categoryInfo.isProvinceRequired && <span className="text-red-500">*</span>}
+                                <Label
+                                    htmlFor="card_province_id"
+                                    className="text-xs font-semibold"
+                                >
+                                    Province{' '}
+                                    {categoryInfo.isProvinceRequired && (
+                                        <span className="text-red-500">*</span>
+                                    )}
                                 </Label>
                                 <Select2
                                     id="card_province_id"
@@ -761,22 +966,33 @@ export function RegisterGuestCard({
                                         htmlFor="card_city_id"
                                         className={cn(
                                             'text-xs font-semibold',
-                                            categoryInfo.isGovOrPswdo && 'text-muted-foreground'
+                                            categoryInfo.isGovOrPswdo &&
+                                                'text-muted-foreground',
                                         )}
                                     >
-                                        City / Municipality {categoryInfo.isCityRequired && <span className="text-red-500">*</span>}
+                                        City / Municipality{' '}
+                                        {categoryInfo.isCityRequired && (
+                                            <span className="text-red-500">
+                                                *
+                                            </span>
+                                        )}
                                     </Label>
                                     {categoryInfo.isGovOrPswdo ? (
                                         <Badge
                                             variant="outline"
-                                            className="text-[10px] border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium"
+                                            className="border-amber-500/40 bg-amber-500/10 text-[10px] font-medium text-amber-700 dark:text-amber-400"
                                         >
-                                            Disabled ({categoryInfo.isGov ? 'Governor' : 'PSWDO'} - Province level)
+                                            Disabled (
+                                            {categoryInfo.isGov
+                                                ? 'Governor'
+                                                : 'PSWDO'}{' '}
+                                            - Province level)
                                         </Badge>
-                                    ) : isSelectedCityDuplicate && selectedCityProvinceName ? (
+                                    ) : isSelectedCityDuplicate &&
+                                      selectedCityProvinceName ? (
                                         <Badge
                                             variant="outline"
-                                            className="text-[10px] border-primary/40 bg-primary/5 text-primary font-medium"
+                                            className="border-primary/40 bg-primary/5 text-[10px] font-medium text-primary"
                                             title="Municipality name is shared across multiple provinces"
                                         >
                                             {selectedCityProvinceName}
@@ -785,11 +1001,18 @@ export function RegisterGuestCard({
                                 </div>
                                 <Select2
                                     id="card_city_id"
-                                    value={categoryInfo.isGovOrPswdo ? '' : data.city_id}
+                                    value={
+                                        categoryInfo.isGovOrPswdo
+                                            ? ''
+                                            : data.city_id
+                                    }
                                     onChange={handleCityChange}
                                     options={cityOptions}
                                     disabled={categoryInfo.isGovOrPswdo}
-                                    loading={!categoryInfo.isGovOrPswdo && isLoadingCities}
+                                    loading={
+                                        !categoryInfo.isGovOrPswdo &&
+                                        isLoadingCities
+                                    }
                                     loadingText="Loading municipalities..."
                                     placeholder={
                                         categoryInfo.isGovOrPswdo
@@ -801,7 +1024,10 @@ export function RegisterGuestCard({
                                                 : 'Select City / Municipality (All)...'
                                     }
                                     searchPlaceholder="Search city / municipality..."
-                                    clearable={!categoryInfo.isGovOrPswdo && !categoryInfo.isCityRequired}
+                                    clearable={
+                                        !categoryInfo.isGovOrPswdo &&
+                                        !categoryInfo.isCityRequired
+                                    }
                                     className="mt-1"
                                     error={errors.city_id}
                                 />

@@ -25,7 +25,9 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     const user = auth?.user;
     const role = user?.role || 'staff';
 
-    const isProtocolPriority = isCurrentOrParentUrl('/settings/protocol-priority');
+    const isProtocolPriority = isCurrentOrParentUrl(
+        '/settings/protocol-priority',
+    );
     const isUsersPage = isCurrentOrParentUrl('/settings/users');
     const isWide = isProtocolPriority || isUsersPage;
 
@@ -70,18 +72,18 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
             title: 'Appearance',
             href: editAppearance(),
             icon: Palette,
-        }
+        },
     );
 
     return (
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
+        <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
             <Heading
                 title="Settings"
                 description="Manage your profile and account settings"
             />
 
-            <div className="flex flex-col lg:flex-row lg:space-x-8 xl:space-x-12 w-full">
-                <aside className="w-full max-w-xl lg:w-48 xl:w-56 shrink-0">
+            <div className="flex w-full flex-col lg:flex-row lg:space-x-8 xl:space-x-12">
+                <aside className="w-full max-w-xl shrink-0 lg:w-48 xl:w-56">
                     <nav
                         className="flex flex-col space-y-1 space-x-0"
                         aria-label="Settings"
@@ -98,7 +100,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                             >
                                 <Link href={item.href}>
                                     {item.icon && (
-                                        <item.icon className="h-4 w-4 mr-2" />
+                                        <item.icon className="mr-2 h-4 w-4" />
                                     )}
                                     {item.title}
                                 </Link>
@@ -111,13 +113,15 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
                 <div
                     className={cn(
-                        'flex-1 min-w-0',
-                        isWide ? 'w-full max-w-none' : 'md:max-w-2xl'
+                        'min-w-0 flex-1',
+                        isWide ? 'w-full max-w-none' : 'md:max-w-2xl',
                     )}
                 >
                     <section
                         className={cn(
-                            isWide ? 'w-full max-w-none space-y-6' : 'max-w-xl space-y-12'
+                            isWide
+                                ? 'w-full max-w-none space-y-6'
+                                : 'max-w-xl space-y-12',
                         )}
                     >
                         {children}

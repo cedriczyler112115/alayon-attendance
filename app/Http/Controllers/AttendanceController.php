@@ -143,11 +143,14 @@ class AttendanceController extends Controller
 
         $isAttending = $request->boolean('is_attending', false);
         $agencyName = $validated['agency_name'] ?? $validated['office_agency'] ?? null;
+        $status = $validated['status'] ?? 'invited';
+        $registeredAt = ($status === 'registered' || $status === 'called') ? now() : null;
 
         $attendee = Attendee::create([
             ...$validated,
             'agency_name' => $agencyName,
-            'status' => $validated['status'] ?? 'invited',
+            'status' => $status,
+            'registered_at' => $registeredAt,
             'is_attending' => $isAttending,
             'rep_prefix_name' => ! $isAttending ? ($validated['rep_prefix_name'] ?? null) : null,
             'rep_fullname' => ! $isAttending ? ($validated['rep_fullname'] ?? null) : null,
@@ -260,10 +263,12 @@ class AttendanceController extends Controller
                 ? array_filter(explode(',', $catInput))
                 : []);
 
+        $statusFilter = $request->input('status', 'registered');
+
         $query = Attendee::with(['event', 'category', 'province', 'city', 'barangay', 'creator'])
             ->when($event, fn ($q) => $q->where('event_id', $event->id))
             ->when(! empty($categoryIds), fn ($q) => $q->whereIn('category_id', $categoryIds))
-            ->where('status', 'invited')
+            ->when($statusFilter && $statusFilter !== 'all', fn ($q) => $q->where('status', $statusFilter))
             ->when($request->input('attendance_mode') === 'without_rep' || $request->input('attendance_mode') === 'in_person', function ($q) {
                 $q->where('is_attending', true)->whereNull('rep_fullname');
             })
@@ -292,9 +297,9 @@ class AttendanceController extends Controller
         } elseif ($sortBy === 'name_desc') {
             $query->orderBy('fullname', 'desc');
         } elseif ($sortBy === 'time_asc') {
-            $query->orderBy('created_at', 'asc');
+            $query->orderByRaw('COALESCE(registered_at, created_at) asc');
         } elseif ($sortBy === 'time_desc') {
-            $query->orderBy('created_at', 'desc');
+            $query->orderByRaw('COALESCE(registered_at, created_at) desc');
         } elseif ($sortBy === 'lgu') {
             $query->leftJoin('lib_provinces', 'attendees.province_id', '=', 'lib_provinces.prov_code')
                 ->leftJoin('lib_cities', 'attendees.city_id', '=', 'lib_cities.city_code')
@@ -376,10 +381,21 @@ class AttendanceController extends Controller
             ? $validated['agency_name']
             : (array_key_exists('office_agency', $validated) ? $validated['office_agency'] : $attendee->agency_name);
 
+        $newStatus = $validated['status'] ?? $attendee->status;
+        $registeredAt = $attendee->registered_at;
+
+        // When toggling from invited to registered, or registering for the first time, log the date registered
+        if (($newStatus === 'registered' || $newStatus === 'called') && ($attendee->status === 'invited' || empty($registeredAt))) {
+            $registeredAt = now();
+        } elseif ($newStatus === 'invited') {
+            $registeredAt = null;
+        }
+
         $attendee->update([
             ...$validated,
             'agency_name' => $agencyName,
-            'status' => $validated['status'] ?? $attendee->status,
+            'status' => $newStatus,
+            'registered_at' => $registeredAt,
             'is_attending' => $isAttending,
             'rep_prefix_name' => ! $isAttending ? ($validated['rep_prefix_name'] ?? null) : null,
             'rep_fullname' => ! $isAttending ? ($validated['rep_fullname'] ?? null) : null,

@@ -1,5 +1,13 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Home, LayoutGrid, Megaphone, Settings, Tag, Tv, Users } from 'lucide-react';
+import {
+    Home,
+    LayoutGrid,
+    Megaphone,
+    Settings,
+    Tag,
+    Tv,
+    Users,
+} from 'lucide-react';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -19,7 +27,7 @@ export function MobileBottomNav() {
     return (
         <nav
             aria-label="Mobile Navigation"
-            className="fixed bottom-0 inset-x-0 z-40 flex h-16 items-center justify-around border-t border-border/70 bg-background/95 backdrop-blur-md px-2 shadow-lg md:hidden safe-area-pb"
+            className="safe-area-pb fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-border/70 bg-background/95 px-2 shadow-lg backdrop-blur-md md:hidden"
         >
             {/* 1. Home Link (All) */}
             <Link
@@ -28,8 +36,8 @@ export function MobileBottomNav() {
                 className={cn(
                     'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
                     isCurrentUrl(dashboard())
-                        ? 'text-primary font-bold'
-                        : 'text-muted-foreground hover:text-foreground'
+                        ? 'font-bold text-primary'
+                        : 'text-muted-foreground hover:text-foreground',
                 )}
             >
                 <Home className="size-5" />
@@ -44,8 +52,8 @@ export function MobileBottomNav() {
                     className={cn(
                         'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
                         isCurrentOrParentUrl('/host')
-                            ? 'text-primary font-bold'
-                            : 'text-muted-foreground hover:text-foreground'
+                            ? 'font-bold text-primary'
+                            : 'text-muted-foreground hover:text-foreground',
                     )}
                 >
                     <Megaphone className="size-5" />
@@ -58,12 +66,14 @@ export function MobileBottomNav() {
                     className={cn(
                         'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
                         isCurrentOrParentUrl('/categories')
-                            ? 'text-primary font-bold'
-                            : 'text-muted-foreground hover:text-foreground'
+                            ? 'font-bold text-primary'
+                            : 'text-muted-foreground hover:text-foreground',
                     )}
                 >
                     <Tag className="size-5" />
-                    <span className="text-[10px] tracking-tight">Categories</span>
+                    <span className="text-[10px] tracking-tight">
+                        Categories
+                    </span>
                 </Link>
             ) : (
                 <Link
@@ -72,12 +82,14 @@ export function MobileBottomNav() {
                     className={cn(
                         'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
                         isCurrentUrl('/attendees')
-                            ? 'text-primary font-bold'
-                            : 'text-muted-foreground hover:text-foreground'
+                            ? 'font-bold text-primary'
+                            : 'text-muted-foreground hover:text-foreground',
                     )}
                 >
                     <Users className="size-5" />
-                    <span className="text-[10px] tracking-tight">Attendees</span>
+                    <span className="text-[10px] tracking-tight">
+                        Attendees
+                    </span>
                 </Link>
             )}
 
@@ -92,8 +104,8 @@ export function MobileBottomNav() {
                     className={cn(
                         'flex size-11 items-center justify-center rounded-2xl shadow-md transition-all active:scale-95',
                         isCurrentUrl('/menu')
-                            ? 'bg-primary text-primary-foreground shadow-primary/35 ring-2 ring-primary ring-offset-2 ring-offset-background'
-                            : 'bg-linear-to-tr from-primary to-primary/85 text-primary-foreground shadow-primary/20'
+                            ? 'bg-primary text-primary-foreground ring-2 shadow-primary/35 ring-primary ring-offset-2 ring-offset-background'
+                            : 'bg-linear-to-tr from-primary to-primary/85 text-primary-foreground shadow-primary/20',
                     )}
                 >
                     <LayoutGrid className="size-5" />
@@ -103,7 +115,7 @@ export function MobileBottomNav() {
                         'mt-0.5 text-[10px] tracking-tight',
                         isCurrentUrl('/menu')
                             ? 'font-bold text-primary'
-                            : 'font-semibold text-primary/90'
+                            : 'font-semibold text-primary/90',
                     )}
                 >
                     Menu
@@ -118,8 +130,8 @@ export function MobileBottomNav() {
                     className={cn(
                         'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
                         isCurrentUrl('/display')
-                            ? 'text-primary font-bold'
-                            : 'text-muted-foreground hover:text-foreground'
+                            ? 'font-bold text-primary'
+                            : 'text-muted-foreground hover:text-foreground',
                     )}
                 >
                     <Tv className="size-5" />
@@ -132,12 +144,14 @@ export function MobileBottomNav() {
                     className={cn(
                         'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
                         isCurrentUrl('/attendees')
-                            ? 'text-primary font-bold'
-                            : 'text-muted-foreground hover:text-foreground'
+                            ? 'font-bold text-primary'
+                            : 'text-muted-foreground hover:text-foreground',
                     )}
                 >
                     <Users className="size-5" />
-                    <span className="text-[10px] tracking-tight">Attendees</span>
+                    <span className="text-[10px] tracking-tight">
+                        Attendees
+                    </span>
                 </Link>
             ) : (
                 <Link
@@ -146,8 +160,8 @@ export function MobileBottomNav() {
                     className={cn(
                         'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
                         isCurrentUrl('/display')
-                            ? 'text-primary font-bold'
-                            : 'text-muted-foreground hover:text-foreground'
+                            ? 'font-bold text-primary'
+                            : 'text-muted-foreground hover:text-foreground',
                     )}
                 >
                     <Tv className="size-5" />
@@ -162,8 +176,8 @@ export function MobileBottomNav() {
                 className={cn(
                     'flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors',
                     isCurrentOrParentUrl('/settings')
-                        ? 'text-primary font-bold'
-                        : 'text-muted-foreground hover:text-foreground'
+                        ? 'font-bold text-primary'
+                        : 'text-muted-foreground hover:text-foreground',
                 )}
             >
                 <Settings className="size-5" />

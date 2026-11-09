@@ -20,7 +20,13 @@ import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { getCategoryCustomField } from '@/lib/category-custom-fields';
 import { cn } from '@/lib/utils';
-import type { Attendee, CityItem, EventItem, GuestCategory, ProvinceItem } from '@/types';
+import type {
+    Attendee,
+    CityItem,
+    EventItem,
+    GuestCategory,
+    ProvinceItem,
+} from '@/types';
 
 type Props = {
     attendee: Attendee | null;
@@ -49,14 +55,7 @@ const COMMON_PREFIXES = [
     'Dr.',
 ];
 
-const REP_PREFIXES = [
-    'Mr.',
-    'Ms.',
-    'Hon.',
-    'Atty.',
-    'Engr.',
-    'Dr.',
-];
+const REP_PREFIXES = ['Mr.', 'Ms.', 'Hon.', 'Atty.', 'Engr.', 'Dr.'];
 
 function getCategoryInfo(cat?: GuestCategory | null) {
     if (!cat) {
@@ -76,11 +75,18 @@ function getCategoryInfo(cat?: GuestCategory | null) {
     const slug = cat.slug?.toLowerCase() || '';
     const name = cat.name?.toLowerCase() || '';
 
-    const isGov = slug === 'governors' || slug === 'governor' || name.includes('governor');
-    const isMayor = slug === 'mayors' || slug === 'mayor' || name.includes('mayor');
+    const isGov =
+        slug === 'governors' ||
+        slug === 'governor' ||
+        name.includes('governor');
+    const isMayor =
+        slug === 'mayors' || slug === 'mayor' || name.includes('mayor');
     const isPswdo = slug === 'pswdo' || name.includes('pswdo');
     const isCswdo = slug === 'cswdo' || name.includes('cswdo');
-    const isLguLink = slug === 'lgu-links' || slug === 'lgu_links' || name.includes('lgu link');
+    const isLguLink =
+        slug === 'lgu-links' ||
+        slug === 'lgu_links' ||
+        name.includes('lgu link');
 
     const isGovOrPswdo = isGov || isPswdo;
     const isCityRequired = isMayor || isCswdo || isLguLink;
@@ -110,20 +116,36 @@ export function UpdateAttendeeDialog({
     events = [],
     currentEvent,
 }: Props) {
-    const [provincesList, setProvincesList] = useState<ProvinceItem[]>(initialProvinces);
+    const [provincesList, setProvincesList] =
+        useState<ProvinceItem[]>(initialProvinces);
     const [allCities, setAllCities] = useState<CityItem[]>(initialCities);
     const [isLoadingCities, setIsLoadingCities] = useState(false);
 
-    const { data, setData, put, processing, errors, reset, clearErrors, setError } = useForm({
+    const {
+        data,
+        setData,
+        put,
+        processing,
+        errors,
+        reset,
+        clearErrors,
+        setError,
+    } = useForm({
         event_id: attendee?.event_id || currentEvent?.id || events[0]?.id || 1,
         status: (attendee?.status || 'registered') as string,
         is_attending: attendee ? Boolean(attendee.is_attending) : false,
-        prefix_name: attendee?.prefix_name === 'Hon' ? 'Hon.' : (attendee?.prefix_name || 'Mr.'),
+        prefix_name:
+            attendee?.prefix_name === 'Hon'
+                ? 'Hon.'
+                : attendee?.prefix_name || 'Mr.',
         category_id: attendee?.category_id || categories[0]?.id || 1,
         fullname: attendee?.fullname || '',
         position: attendee?.position || '',
         agency_name: attendee?.agency_name || attendee?.office_agency || '',
-        rep_prefix_name: attendee?.rep_prefix_name === 'Hon' ? 'Hon.' : (attendee?.rep_prefix_name || 'Mr.'),
+        rep_prefix_name:
+            attendee?.rep_prefix_name === 'Hon'
+                ? 'Hon.'
+                : attendee?.rep_prefix_name || 'Mr.',
         rep_fullname: attendee?.rep_fullname || '',
         rep_position: attendee?.rep_position || '',
         province_id: (attendee?.province_id || '') as string | number,
@@ -136,15 +158,23 @@ export function UpdateAttendeeDialog({
         if (attendee && open) {
             clearErrors();
             setData({
-                event_id: attendee.event_id || currentEvent?.id || events[0]?.id || 1,
+                event_id:
+                    attendee.event_id || currentEvent?.id || events[0]?.id || 1,
                 status: attendee.status || 'registered',
                 is_attending: attendee ? Boolean(attendee.is_attending) : false,
-                prefix_name: attendee.prefix_name === 'Hon' ? 'Hon.' : (attendee.prefix_name || ''),
+                prefix_name:
+                    attendee.prefix_name === 'Hon'
+                        ? 'Hon.'
+                        : attendee.prefix_name || '',
                 category_id: attendee.category_id || categories[0]?.id || 1,
                 fullname: attendee.fullname || '',
                 position: attendee.position || '',
-                agency_name: attendee.agency_name || attendee.office_agency || '',
-                rep_prefix_name: attendee.rep_prefix_name === 'Hon' ? 'Hon.' : (attendee.rep_prefix_name || 'Mr.'),
+                agency_name:
+                    attendee.agency_name || attendee.office_agency || '',
+                rep_prefix_name:
+                    attendee.rep_prefix_name === 'Hon'
+                        ? 'Hon.'
+                        : attendee.rep_prefix_name || 'Mr.',
                 rep_fullname: attendee.rep_fullname || '',
                 rep_position: attendee.rep_position || '',
                 province_id: attendee.province_id || '',
@@ -180,7 +210,9 @@ export function UpdateAttendeeDialog({
 
     // Region 16 provinces filter
     const region16Provinces = useMemo(() => {
-        return provincesList.filter((p) => !p.region_code || Number(p.region_code) === 16);
+        return provincesList.filter(
+            (p) => !p.region_code || Number(p.region_code) === 16,
+        );
     }, [provincesList]);
 
     const provinceMap = useMemo(() => {
@@ -205,22 +237,34 @@ export function UpdateAttendeeDialog({
         if (!data.province_id) {
             return allCities;
         }
-        return allCities.filter((c) => c.prov_code === Number(data.province_id));
+        return allCities.filter(
+            (c) => c.prov_code === Number(data.province_id),
+        );
     }, [allCities, data.province_id]);
 
     const selectedCityObj = useMemo(() => {
         if (!data.city_id) return null;
-        return allCities.find((c) => c.city_code === Number(data.city_id)) || null;
+        return (
+            allCities.find((c) => c.city_code === Number(data.city_id)) || null
+        );
     }, [allCities, data.city_id]);
 
     const isSelectedCityDuplicate = useMemo(() => {
         if (!selectedCityObj) return false;
-        return (duplicateCityNames.get(selectedCityObj.city_name.trim().toLowerCase()) || 0) > 1;
+        return (
+            (duplicateCityNames.get(
+                selectedCityObj.city_name.trim().toLowerCase(),
+            ) || 0) > 1
+        );
     }, [selectedCityObj, duplicateCityNames]);
 
     const selectedCityProvinceName = useMemo(() => {
         if (!selectedCityObj) return '';
-        return selectedCityObj.province?.prov_name || provinceMap.get(selectedCityObj.prov_code) || '';
+        return (
+            selectedCityObj.province?.prov_name ||
+            provinceMap.get(selectedCityObj.prov_code) ||
+            ''
+        );
     }, [selectedCityObj, provinceMap]);
 
     const handleCityChange = (cityCode: number | string) => {
@@ -234,7 +278,9 @@ export function UpdateAttendeeDialog({
                 return { ...prev, city_id: '' };
             }
             const chosenCity = allCities.find((c) => c.city_code === code);
-            const autoProvinceId = chosenCity ? chosenCity.prov_code : prev.province_id;
+            const autoProvinceId = chosenCity
+                ? chosenCity.prov_code
+                : prev.province_id;
             return {
                 ...prev,
                 city_id: code,
@@ -247,8 +293,11 @@ export function UpdateAttendeeDialog({
         const code = provCode ? Number(provCode) : '';
         clearErrors('province_id');
         setData((prev) => {
-            const currentCity = allCities.find((c) => c.city_code === Number(prev.city_id));
-            const shouldClearCity = !code || (currentCity && currentCity.prov_code !== code);
+            const currentCity = allCities.find(
+                (c) => c.city_code === Number(prev.city_id),
+            );
+            const shouldClearCity =
+                !code || (currentCity && currentCity.prov_code !== code);
 
             return {
                 ...prev,
@@ -258,9 +307,17 @@ export function UpdateAttendeeDialog({
         });
     };
 
-    const selectedCategory = categories.find((c) => c.id === Number(data.category_id));
-    const categoryInfo = useMemo(() => getCategoryInfo(selectedCategory), [selectedCategory]);
-    const customField = useMemo(() => getCategoryCustomField(selectedCategory), [selectedCategory]);
+    const selectedCategory = categories.find(
+        (c) => c.id === Number(data.category_id),
+    );
+    const categoryInfo = useMemo(
+        () => getCategoryInfo(selectedCategory),
+        [selectedCategory],
+    );
+    const customField = useMemo(
+        () => getCategoryCustomField(selectedCategory),
+        [selectedCategory],
+    );
 
     const handleCategoryChange = (catId: number) => {
         clearErrors('province_id', 'city_id');
@@ -280,10 +337,17 @@ export function UpdateAttendeeDialog({
                 position = 'Municipal Mayor';
             }
         } else {
-            if (prefix_name === 'Hon' || prefix_name === 'Hon.' || prefix_name === 'Honorable') {
+            if (
+                prefix_name === 'Hon' ||
+                prefix_name === 'Hon.' ||
+                prefix_name === 'Honorable'
+            ) {
                 prefix_name = 'Mr.';
             }
-            if (position === 'Provincial Governor' || position === 'Municipal Mayor') {
+            if (
+                position === 'Provincial Governor' ||
+                position === 'Municipal Mayor'
+            ) {
                 position = '';
             }
         }
@@ -304,7 +368,10 @@ export function UpdateAttendeeDialog({
 
         let hasError = false;
         if (!data.position?.trim()) {
-            setError('position', 'The official position / designation field is required.');
+            setError(
+                'position',
+                'The official position / designation field is required.',
+            );
             hasError = true;
         }
         if (categoryInfo.isProvinceRequired && !data.province_id) {
@@ -324,7 +391,9 @@ export function UpdateAttendeeDialog({
         put(`/attendees/${attendee.id}`, {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success(`Attendee "${data.fullname}" updated successfully!`);
+                toast.success(
+                    `Attendee "${data.fullname}" updated successfully!`,
+                );
                 onOpenChange(false);
             },
         });
@@ -334,7 +403,12 @@ export function UpdateAttendeeDialog({
         return categories.map((cat) => ({
             value: cat.id,
             label: cat.name,
-            badge: cat.scope === 'province' ? 'Province Level' : cat.scope === 'municipality' ? 'Per City/Mun' : 'General',
+            badge:
+                cat.scope === 'province'
+                    ? 'Province Level'
+                    : cat.scope === 'municipality'
+                      ? 'Per City/Mun'
+                      : 'General',
         }));
     }, [categories]);
 
@@ -359,13 +433,19 @@ export function UpdateAttendeeDialog({
 
     const cityOptions = useMemo(() => {
         return displayedCities.map((cty) => {
-            const isDuplicate = (duplicateCityNames.get(cty.city_name.trim().toLowerCase()) || 0) > 1;
-            const provName = cty.province?.prov_name || provinceMap.get(cty.prov_code) || '';
+            const isDuplicate =
+                (duplicateCityNames.get(cty.city_name.trim().toLowerCase()) ||
+                    0) > 1;
+            const provName =
+                cty.province?.prov_name || provinceMap.get(cty.prov_code) || '';
 
             return {
                 value: cty.city_code,
                 label: cty.city_name,
-                badge: (isDuplicate || !data.province_id) && provName ? provName : undefined,
+                badge:
+                    (isDuplicate || !data.province_id) && provName
+                        ? provName
+                        : undefined,
                 description: provName ? `Province: ${provName}` : undefined,
             };
         });
@@ -374,34 +454,40 @@ export function UpdateAttendeeDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
-                className="w-[calc(100vw-1.5rem)] sm:w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-3.5 sm:p-6"
+                className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-x-hidden overflow-y-auto p-3.5 sm:w-full sm:max-w-3xl sm:p-6"
                 onPointerDownOutside={(e) => e.preventDefault()}
                 onInteractOutside={(e) => e.preventDefault()}
                 hideCloseButton={true}
             >
-                <DialogHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800">
+                <DialogHeader className="border-b border-neutral-100 pb-3 dark:border-neutral-800">
                     <div className="flex items-start justify-between gap-2.5 sm:gap-3">
-                        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 dark:bg-primary/20 dark:border-primary/30 shadow-2xs">
+                        <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+                            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary shadow-2xs sm:size-10 dark:border-primary/30 dark:bg-primary/20">
                                 <Pencil className="size-4.5 sm:size-5" />
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                                    <DialogTitle className="text-sm sm:text-base md:text-lg font-bold tracking-tight text-neutral-900 dark:text-white">
+                                    <DialogTitle className="text-sm font-bold tracking-tight text-neutral-900 sm:text-base md:text-lg dark:text-white">
                                         Update Attendee Record
                                     </DialogTitle>
                                     {attendee && (
-                                        <Badge variant="outline" className="font-mono text-[10px] font-bold text-neutral-500 shrink-0">
+                                        <Badge
+                                            variant="outline"
+                                            className="shrink-0 font-mono text-[10px] font-bold text-neutral-500"
+                                        >
                                             #{attendee.id}
                                         </Badge>
                                     )}
                                     {attendee?.category?.name && (
-                                        <Badge variant="outline" className="text-[10px] font-semibold border-primary/30 text-primary shrink-0">
+                                        <Badge
+                                            variant="outline"
+                                            className="shrink-0 border-primary/30 text-[10px] font-semibold text-primary"
+                                        >
                                             {attendee.category.name}
                                         </Badge>
                                     )}
                                 </div>
-                                <DialogDescription className="text-xs text-muted-foreground mt-0.5 truncate">
+                                <DialogDescription className="mt-0.5 truncate text-xs text-muted-foreground">
                                     Edit details for{' '}
                                     <strong className="font-semibold text-neutral-900 dark:text-white">
                                         {attendee?.fullname}
@@ -413,7 +499,7 @@ export function UpdateAttendeeDialog({
                         <button
                             type="button"
                             onClick={() => onOpenChange(false)}
-                            className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-neutral-200/60 bg-neutral-50/50 text-neutral-400 hover:border-neutral-300 hover:bg-neutral-100 hover:text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-white transition-all shadow-2xs"
+                            className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-neutral-200/60 bg-neutral-50/50 text-neutral-400 shadow-2xs transition-all hover:border-neutral-300 hover:bg-neutral-100 hover:text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-white"
                             title="Close modal (Esc)"
                             aria-label="Close modal"
                         >
@@ -422,18 +508,27 @@ export function UpdateAttendeeDialog({
                     </div>
                 </DialogHeader>
 
-                <form id="update_attendee_form" onSubmit={handleSubmit} className="space-y-4 pt-2">
+                <form
+                    id="update_attendee_form"
+                    onSubmit={handleSubmit}
+                    className="space-y-4 pt-2"
+                >
                     {/* Primary Guest Details Row */}
                     <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-12">
                         {/* Category */}
                         <div className="col-span-1 sm:col-span-1 lg:col-span-4">
-                            <Label htmlFor="edit_category_id" className="text-xs font-semibold">
+                            <Label
+                                htmlFor="edit_category_id"
+                                className="text-xs font-semibold"
+                            >
                                 Category <span className="text-red-500">*</span>
                             </Label>
                             <Select2
                                 id="edit_category_id"
                                 value={data.category_id}
-                                onChange={(val) => handleCategoryChange(Number(val))}
+                                onChange={(val) =>
+                                    handleCategoryChange(Number(val))
+                                }
                                 options={categoryOptions}
                                 placeholder="Select category..."
                                 searchPlaceholder="Search category..."
@@ -445,13 +540,18 @@ export function UpdateAttendeeDialog({
 
                         {/* Prefix */}
                         <div className="col-span-1 sm:col-span-1 lg:col-span-3">
-                            <Label htmlFor="edit_prefix_name" className="text-xs font-semibold whitespace-nowrap">
+                            <Label
+                                htmlFor="edit_prefix_name"
+                                className="text-xs font-semibold whitespace-nowrap"
+                            >
                                 Prefix (Mr. Ms, Hon.)
                             </Label>
                             <Select2
                                 id="edit_prefix_name"
                                 value={data.prefix_name}
-                                onChange={(val) => setData('prefix_name', String(val))}
+                                onChange={(val) =>
+                                    setData('prefix_name', String(val))
+                                }
                                 options={prefixOptions}
                                 placeholder="Prefix..."
                                 searchPlaceholder="Prefix..."
@@ -463,25 +563,42 @@ export function UpdateAttendeeDialog({
 
                         {/* Full Name */}
                         <div className="col-span-1 sm:col-span-2 lg:col-span-5">
-                            <Label htmlFor="edit_fullname" className="text-xs font-semibold">
-                                Full Name <span className="text-red-500">*</span>
+                            <Label
+                                htmlFor="edit_fullname"
+                                className="text-xs font-semibold"
+                            >
+                                Full Name{' '}
+                                <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="edit_fullname"
                                 type="text"
                                 required
                                 value={data.fullname}
-                                onChange={(e) => setData('fullname', e.target.value)}
+                                onChange={(e) =>
+                                    setData('fullname', e.target.value)
+                                }
                                 placeholder="e.g. Juan P. Dela Cruz"
-                                className="mt-1 h-9.5 rounded-lg border-neutral-300 dark:border-neutral-700 text-xs sm:text-sm"
+                                className="mt-1 h-9.5 rounded-lg border-neutral-300 text-xs sm:text-sm dark:border-neutral-700"
                             />
                             <InputError message={errors.fullname} />
                         </div>
 
-                        {/* Official Position (Row 2 on desktop, beside Custom Field & Status) */}
-                        <div className={cn('col-span-1 sm:col-span-1', customField ? 'lg:col-span-5' : 'lg:col-span-8')}>
-                            <Label htmlFor="edit_position" className="text-xs font-semibold">
-                                Official Position / Designation <span className="text-red-500">*</span>
+                        {/* Official Position (Row 2 on desktop, beside Custom Field) */}
+                        <div
+                            className={cn(
+                                'col-span-1 sm:col-span-1',
+                                customField
+                                    ? 'lg:col-span-6'
+                                    : 'lg:col-span-12',
+                            )}
+                        >
+                            <Label
+                                htmlFor="edit_position"
+                                className="text-xs font-semibold"
+                            >
+                                Official Position / Designation{' '}
+                                <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="edit_position"
@@ -498,69 +615,58 @@ export function UpdateAttendeeDialog({
                                           ? 'Municipal Mayor'
                                           : 'Official position / designation (Required)'
                                 }
-                                className="mt-1 h-9.5 rounded-lg border-neutral-300 dark:border-neutral-700 text-xs sm:text-sm"
+                                className="mt-1 h-9.5 rounded-lg border-neutral-300 text-xs sm:text-sm dark:border-neutral-700"
                             />
                             <InputError message={errors.position} />
                         </div>
 
                         {/* Additional Category-Specific Field (Agency / Branch Name / CSO Name / School/Health Name / Division Name) */}
                         {customField && (
-                            <div className="col-span-1 sm:col-span-1 lg:col-span-4">
-                                <Label htmlFor="edit_agency_name" className="text-xs font-semibold whitespace-nowrap">
+                            <div className="col-span-1 sm:col-span-1 lg:col-span-6">
+                                <Label
+                                    htmlFor="edit_agency_name"
+                                    className="text-xs font-semibold whitespace-nowrap"
+                                >
                                     {customField.label}
                                 </Label>
                                 <Input
                                     id="edit_agency_name"
                                     type="text"
                                     value={data.agency_name}
-                                    onChange={(e) => setData('agency_name', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('agency_name', e.target.value)
+                                    }
                                     placeholder={customField.placeholder}
-                                    className="mt-1 h-9.5 rounded-lg border-neutral-300 dark:border-neutral-700 text-xs sm:text-sm"
+                                    className="mt-1 h-9.5 rounded-lg border-neutral-300 text-xs sm:text-sm dark:border-neutral-700"
                                 />
                                 <InputError message={errors.agency_name} />
                             </div>
                         )}
-
-                        {/* Status (Row 2 on desktop, beside Official Position & Custom Field) */}
-                        <div className={cn('col-span-1 sm:col-span-1', customField ? 'lg:col-span-3' : 'lg:col-span-4')}>
-                            <Label htmlFor="edit_status" className="text-xs font-semibold">
-                                Status
-                            </Label>
-                            <Select2
-                                id="edit_status"
-                                value={data.status}
-                                onChange={(val) => setData('status', String(val))}
-                                options={[
-                                    ...(attendee?.status === 'invited' ? [{ value: 'invited', label: 'Invited' }] : []),
-                                    { value: 'registered', label: 'Registered' },
-                                    { value: 'called', label: 'Called' },
-                                ]}
-                                placeholder="Select status..."
-                                className="mt-1"
-                                error={errors.status}
-                            />
-                            <InputError message={errors.status} />
-                        </div>
                     </div>
 
                     {/* Confirmation to Attend Switch Section */}
-                    <div className="rounded-xl border border-neutral-200 bg-neutral-50/50 p-3.5 sm:p-4 shadow-2xs dark:border-neutral-800 dark:bg-neutral-900/60 overflow-visible">
+                    <div className="overflow-visible rounded-xl border border-neutral-200 bg-neutral-50/50 p-3.5 shadow-2xs sm:p-4 dark:border-neutral-800 dark:bg-neutral-900/60">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="space-y-0.5">
                                 <div className="flex items-center gap-2">
-                                    <Label htmlFor="edit_is_attending" className="text-xs font-bold text-neutral-800 dark:text-neutral-200 sm:text-sm">
+                                    <Label
+                                        htmlFor="edit_is_attending"
+                                        className="text-xs font-bold text-neutral-800 sm:text-sm dark:text-neutral-200"
+                                    >
                                         Confirmation: Attending in Person?
                                     </Label>
                                     <Badge
                                         variant="outline"
                                         className={cn(
-                                            'text-[10px] font-semibold px-2 py-0.5',
+                                            'px-2 py-0.5 text-[10px] font-semibold',
                                             data.is_attending
                                                 ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                                                : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                                                : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300',
                                         )}
                                     >
-                                        {data.is_attending ? 'Yes — Confirmed to Attend' : 'No — Sending Representative'}
+                                        {data.is_attending
+                                            ? 'Yes — Confirmed to Attend'
+                                            : 'No — Sending Representative'}
                                     </Badge>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground sm:text-xs">
@@ -570,17 +676,33 @@ export function UpdateAttendeeDialog({
                                 </p>
                             </div>
 
-                            <div className="flex items-center gap-2.5 self-start rounded-lg border border-neutral-200 bg-white px-3 py-1.5 dark:border-neutral-700 dark:bg-neutral-800 sm:self-center">
-                                <span className={cn('text-xs font-bold', !data.is_attending ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground')}>
+                            <div className="flex items-center gap-2.5 self-start rounded-lg border border-neutral-200 bg-white px-3 py-1.5 sm:self-center dark:border-neutral-700 dark:bg-neutral-800">
+                                <span
+                                    className={cn(
+                                        'text-xs font-bold',
+                                        !data.is_attending
+                                            ? 'text-amber-600 dark:text-amber-400'
+                                            : 'text-muted-foreground',
+                                    )}
+                                >
                                     NO
                                 </span>
                                 <Switch
                                     id="edit_is_attending"
                                     checked={data.is_attending}
-                                    onCheckedChange={(checked) => setData('is_attending', checked)}
+                                    onCheckedChange={(checked) =>
+                                        setData('is_attending', checked)
+                                    }
                                     aria-label="Attendance confirmation"
                                 />
-                                <span className={cn('text-xs font-bold', data.is_attending ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground')}>
+                                <span
+                                    className={cn(
+                                        'text-xs font-bold',
+                                        data.is_attending
+                                            ? 'text-emerald-600 dark:text-emerald-400'
+                                            : 'text-muted-foreground',
+                                    )}
+                                >
                                     YES
                                 </span>
                             </div>
@@ -592,62 +714,98 @@ export function UpdateAttendeeDialog({
                                 <div className="mb-3 flex items-center justify-between">
                                     <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
                                         <Users className="size-3.5 text-amber-600 dark:text-amber-400" />
-                                        <span>Authorized Representative Details</span>
+                                        <span>
+                                            Authorized Representative Details
+                                        </span>
                                     </div>
-                                    <span className="text-[10px] text-amber-700 dark:text-amber-400 font-medium">
-                                        Representative attending on behalf of the invitee
+                                    <span className="text-[10px] font-medium text-amber-700 dark:text-amber-400">
+                                        Representative attending on behalf of
+                                        the invitee
                                     </span>
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-12">
                                     {/* Representative Prefix */}
                                     <div className="sm:col-span-3">
-                                        <Label htmlFor="edit_rep_prefix_name" className="text-xs font-semibold whitespace-nowrap">
+                                        <Label
+                                            htmlFor="edit_rep_prefix_name"
+                                            className="text-xs font-semibold whitespace-nowrap"
+                                        >
                                             Prefix (Mr. Ms, Hon.)
                                         </Label>
                                         <Select2
                                             id="edit_rep_prefix_name"
                                             value={data.rep_prefix_name}
-                                            onChange={(val) => setData('rep_prefix_name', String(val))}
+                                            onChange={(val) =>
+                                                setData(
+                                                    'rep_prefix_name',
+                                                    String(val),
+                                                )
+                                            }
                                             options={repPrefixOptions}
                                             placeholder="Prefix..."
                                             className="mt-1"
                                             error={errors.rep_prefix_name}
                                         />
-                                        <InputError message={errors.rep_prefix_name} />
+                                        <InputError
+                                            message={errors.rep_prefix_name}
+                                        />
                                     </div>
 
                                     {/* Representative Full Name */}
                                     <div className="sm:col-span-5">
-                                        <Label htmlFor="edit_rep_fullname" className="text-xs font-semibold">
-                                            Representative Name <span className="text-red-500">*</span>
+                                        <Label
+                                            htmlFor="edit_rep_fullname"
+                                            className="text-xs font-semibold"
+                                        >
+                                            Representative Name{' '}
+                                            <span className="text-red-500">
+                                                *
+                                            </span>
                                         </Label>
                                         <Input
                                             id="edit_rep_fullname"
                                             type="text"
                                             required={!data.is_attending}
                                             value={data.rep_fullname}
-                                            onChange={(e) => setData('rep_fullname', e.target.value)}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'rep_fullname',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="e.g. Maria Santos"
                                             className="mt-1 h-9.5 rounded-lg border-neutral-300 bg-white text-xs sm:text-sm dark:border-neutral-700 dark:bg-neutral-900"
                                         />
-                                        <InputError message={errors.rep_fullname} />
+                                        <InputError
+                                            message={errors.rep_fullname}
+                                        />
                                     </div>
 
                                     {/* Representative Position */}
                                     <div className="sm:col-span-4">
-                                        <Label htmlFor="edit_rep_position" className="text-xs font-semibold">
+                                        <Label
+                                            htmlFor="edit_rep_position"
+                                            className="text-xs font-semibold"
+                                        >
                                             Representative Position
                                         </Label>
                                         <Input
                                             id="edit_rep_position"
                                             type="text"
                                             value={data.rep_position}
-                                            onChange={(e) => setData('rep_position', e.target.value)}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'rep_position',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="e.g. Chief of Staff / Assistant"
                                             className="mt-1 h-9.5 rounded-lg border-neutral-300 bg-white text-xs sm:text-sm dark:border-neutral-700 dark:bg-neutral-900"
                                         />
-                                        <InputError message={errors.rep_position} />
+                                        <InputError
+                                            message={errors.rep_position}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -655,7 +813,7 @@ export function UpdateAttendeeDialog({
                     </div>
 
                     {/* Location Jurisdiction Box */}
-                    <div className="rounded-xl border border-neutral-200 bg-neutral-50/70 p-3.5 sm:p-4 dark:border-neutral-800 dark:bg-neutral-900/40 overflow-visible">
+                    <div className="overflow-visible rounded-xl border border-neutral-200 bg-neutral-50/70 p-3.5 sm:p-4 dark:border-neutral-800 dark:bg-neutral-900/40">
                         <div className="mb-3 flex items-center justify-between">
                             <div className="flex items-center gap-2 text-xs font-semibold text-neutral-800 dark:text-neutral-200">
                                 <MapPin className="size-3.5 text-primary" />
@@ -673,8 +831,14 @@ export function UpdateAttendeeDialog({
                         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                             {/* Province Select2 */}
                             <div>
-                                <Label htmlFor="edit_province_id" className="text-xs font-semibold">
-                                    Province {categoryInfo.isProvinceRequired && <span className="text-red-500">*</span>}
+                                <Label
+                                    htmlFor="edit_province_id"
+                                    className="text-xs font-semibold"
+                                >
+                                    Province{' '}
+                                    {categoryInfo.isProvinceRequired && (
+                                        <span className="text-red-500">*</span>
+                                    )}
                                 </Label>
                                 <Select2
                                     id="edit_province_id"
@@ -701,22 +865,33 @@ export function UpdateAttendeeDialog({
                                         htmlFor="edit_city_id"
                                         className={cn(
                                             'text-xs font-semibold',
-                                            categoryInfo.isGovOrPswdo && 'text-muted-foreground'
+                                            categoryInfo.isGovOrPswdo &&
+                                                'text-muted-foreground',
                                         )}
                                     >
-                                        City / Municipality {categoryInfo.isCityRequired && <span className="text-red-500">*</span>}
+                                        City / Municipality{' '}
+                                        {categoryInfo.isCityRequired && (
+                                            <span className="text-red-500">
+                                                *
+                                            </span>
+                                        )}
                                     </Label>
                                     {categoryInfo.isGovOrPswdo ? (
                                         <Badge
                                             variant="outline"
-                                            className="text-[10px] border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium"
+                                            className="border-amber-500/40 bg-amber-500/10 text-[10px] font-medium text-amber-700 dark:text-amber-400"
                                         >
-                                            Disabled ({categoryInfo.isGov ? 'Governor' : 'PSWDO'} - Province level)
+                                            Disabled (
+                                            {categoryInfo.isGov
+                                                ? 'Governor'
+                                                : 'PSWDO'}{' '}
+                                            - Province level)
                                         </Badge>
-                                    ) : isSelectedCityDuplicate && selectedCityProvinceName ? (
+                                    ) : isSelectedCityDuplicate &&
+                                      selectedCityProvinceName ? (
                                         <Badge
                                             variant="outline"
-                                            className="text-[10px] border-primary/40 bg-primary/5 text-primary font-medium"
+                                            className="border-primary/40 bg-primary/5 text-[10px] font-medium text-primary"
                                         >
                                             {selectedCityProvinceName}
                                         </Badge>
@@ -724,11 +899,18 @@ export function UpdateAttendeeDialog({
                                 </div>
                                 <Select2
                                     id="edit_city_id"
-                                    value={categoryInfo.isGovOrPswdo ? '' : data.city_id}
+                                    value={
+                                        categoryInfo.isGovOrPswdo
+                                            ? ''
+                                            : data.city_id
+                                    }
                                     onChange={handleCityChange}
                                     options={cityOptions}
                                     disabled={categoryInfo.isGovOrPswdo}
-                                    loading={!categoryInfo.isGovOrPswdo && isLoadingCities}
+                                    loading={
+                                        !categoryInfo.isGovOrPswdo &&
+                                        isLoadingCities
+                                    }
                                     loadingText="Loading municipalities..."
                                     placeholder={
                                         categoryInfo.isGovOrPswdo
@@ -739,16 +921,102 @@ export function UpdateAttendeeDialog({
                                                 ? 'Select municipality...'
                                                 : 'Select City / Municipality...'
                                     }
-                                    clearable={!categoryInfo.isGovOrPswdo && !categoryInfo.isCityRequired}
+                                    clearable={
+                                        !categoryInfo.isGovOrPswdo &&
+                                        !categoryInfo.isCityRequired
+                                    }
                                     className="mt-1"
                                     error={errors.city_id}
                                 />
                                 <InputError message={errors.city_id} />
+
+                                {/* Attendance Status Slider (On: Registered, Off: Invited) */}
+                                <div className="mt-3 rounded-xl border border-neutral-200/80 bg-white p-2.5 shadow-2xs dark:border-neutral-700/80 dark:bg-neutral-800/80">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="space-y-0.5">
+                                            <div className="flex items-center gap-1.5">
+                                                <Label
+                                                    htmlFor="edit_status_switch"
+                                                    className="cursor-pointer text-xs font-bold text-neutral-800 dark:text-neutral-200"
+                                                >
+                                                    Attendance Status:
+                                                </Label>
+                                                <Badge
+                                                    variant="outline"
+                                                    className={cn(
+                                                        'px-2 py-0.5 text-[10px] font-bold',
+                                                        data.status ===
+                                                            'registered' ||
+                                                            data.status ===
+                                                                'called'
+                                                            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                                                            : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+                                                    )}
+                                                >
+                                                    {data.status ===
+                                                        'registered' ||
+                                                    data.status === 'called'
+                                                        ? 'Registered'
+                                                        : 'Invited'}
+                                                </Badge>
+                                            </div>
+                                            <p className="text-[10px] text-muted-foreground">
+                                                {data.status === 'registered' ||
+                                                data.status === 'called'
+                                                    ? 'Tagged as Registered attendee'
+                                                    : 'Tagged as Invited guest only'}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex shrink-0 items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-1 dark:border-neutral-700 dark:bg-neutral-900">
+                                            <span
+                                                className={cn(
+                                                    'text-[11px] font-bold',
+                                                    data.status === 'invited'
+                                                        ? 'text-amber-600 dark:text-amber-400'
+                                                        : 'text-muted-foreground',
+                                                )}
+                                            >
+                                                OFF
+                                            </span>
+                                            <Switch
+                                                id="edit_status_switch"
+                                                checked={
+                                                    data.status ===
+                                                        'registered' ||
+                                                    data.status === 'called'
+                                                }
+                                                onCheckedChange={(checked) => {
+                                                    setData(
+                                                        'status',
+                                                        checked
+                                                            ? 'registered'
+                                                            : 'invited',
+                                                    );
+                                                }}
+                                                aria-label="Attendance status toggle (ON: Registered, OFF: Invited)"
+                                            />
+                                            <span
+                                                className={cn(
+                                                    'text-[11px] font-bold',
+                                                    data.status ===
+                                                        'registered' ||
+                                                        data.status === 'called'
+                                                        ? 'text-emerald-600 dark:text-emerald-400'
+                                                        : 'text-muted-foreground',
+                                                )}
+                                            >
+                                                ON
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <InputError message={errors.status} />
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <DialogFooter className="pt-2 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <DialogFooter className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
                         <Button
                             type="button"
                             variant="outline"
@@ -766,7 +1034,12 @@ export function UpdateAttendeeDialog({
                         >
                             {processing && <Spinner className="size-3.5" />}
                             <UserCheck className="size-3.5" />
-                            <span>Tagged as Attended</span>
+                            <span>
+                                {data.status === 'registered' ||
+                                data.status === 'called'
+                                    ? 'Tagged as Attended'
+                                    : 'Save as Invited'}
+                            </span>
                         </Button>
                     </DialogFooter>
                 </form>
@@ -774,4 +1047,3 @@ export function UpdateAttendeeDialog({
         </Dialog>
     );
 }
-

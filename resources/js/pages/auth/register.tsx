@@ -24,7 +24,9 @@ export default function Register() {
                         <div className="grid gap-5">
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="firstname">First name</Label>
+                                    <Label htmlFor="firstname">
+                                        First name
+                                    </Label>
                                     <Input
                                         id="firstname"
                                         type="text"
@@ -40,8 +42,12 @@ export default function Register() {
 
                                 <div className="grid gap-2">
                                     <div className="flex items-center justify-between">
-                                        <Label htmlFor="middlename">Middle name</Label>
-                                        <span className="text-xs text-muted-foreground">Optional</span>
+                                        <Label htmlFor="middlename">
+                                            Middle name
+                                        </Label>
+                                        <span className="text-xs text-muted-foreground">
+                                            Optional
+                                        </span>
                                     </div>
                                     <Input
                                         id="middlename"
@@ -97,7 +103,9 @@ export default function Register() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password_confirmation">Confirm password</Label>
+                                <Label htmlFor="password_confirmation">
+                                    Confirm password
+                                </Label>
                                 <PasswordInput
                                     id="password_confirmation"
                                     name="password_confirmation"
@@ -106,7 +114,9 @@ export default function Register() {
                                     autoComplete="new-password"
                                     placeholder="Confirm password"
                                 />
-                                <InputError message={errors.password_confirmation} />
+                                <InputError
+                                    message={errors.password_confirmation}
+                                />
                             </div>
 
                             <Button
@@ -138,4 +148,3 @@ Register.layout = {
     title: 'Create an account',
     description: 'Enter your details below to create your account',
 };
-

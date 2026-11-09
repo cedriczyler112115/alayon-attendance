@@ -67,6 +67,7 @@ export type Attendee = {
     city_id?: number | null;
     brgy_id?: number | null;
     created_by?: number | null;
+    registered_at?: string | null;
     created_at?: string;
     updated_at?: string;
 
