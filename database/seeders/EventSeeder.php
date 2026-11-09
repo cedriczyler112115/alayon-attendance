@@ -15,7 +15,7 @@ class EventSeeder extends Seeder
         Event::firstOrCreate(
             ['title' => 'Alayon Annual Stakeholders & LGU Leaders Assembly'],
             [
-                'theme' => 'Strengthening Collaborative Partnerships for Inclusive Community Resilience',
+                'theme' => 'Alayon connect: powering progress',
                 'venue' => 'Grand Convention Center, Provincial Capitol Complex',
                 'event_date' => now()->toDateString(),
                 'status' => 'active',

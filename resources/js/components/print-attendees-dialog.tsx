@@ -1409,22 +1409,24 @@ export function PrintAttendeesDialog({
                                     {/* Document Header */}
                                     <div className="print-header mb-4 border-b-2 border-neutral-900 pb-3 text-center">
                                         <div className="text-[10px] font-semibold tracking-widest text-neutral-500 uppercase">
-                                            Republic of the Philippines
+                                            Department of Social Welfare and Development
                                         </div>
                                         <div className="mt-0.5 text-xs font-bold tracking-wider text-neutral-800 uppercase">
-                                            Alayon Stakeholders Attendance &
-                                            Guest Registry System
+                                            Pantawid Pamilyang Pilipino Program
                                         </div>
                                         <h1 className="mt-1 text-lg font-extrabold text-neutral-950 sm:text-xl">
                                             {resolvedEvent?.title ||
                                                 'Assembly & Stakeholders Meeting'}
                                         </h1>
-                                        {resolvedEvent?.theme && (
-                                            <p className="mx-auto mt-0.5 max-w-2xl text-[11px] text-neutral-600 italic">
-                                                &ldquo;{resolvedEvent.theme}
-                                                &rdquo;
-                                            </p>
-                                        )}
+                                        <p className="mx-auto mt-0.5 max-w-2xl text-[11px] text-neutral-600 italic">
+                                            &ldquo;
+                                            {resolvedEvent?.theme &&
+                                            resolvedEvent.theme !==
+                                                'Strengthening Collaborative Partnerships for Inclusive Community Resilience'
+                                                ? resolvedEvent.theme
+                                                : 'Alayon connect: powering progress'}
+                                            &rdquo;
+                                        </p>
                                         <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5 text-[10.5px] text-neutral-700">
                                             {resolvedEvent?.venue && (
                                                 <span>
@@ -1848,8 +1850,8 @@ export function PrintAttendeesDialog({
                                     {/* Document Footer */}
                                     <div className="print-footer mt-6 flex items-center justify-between border-t border-neutral-200 pt-2 text-[9px] text-neutral-400">
                                         <span>
-                                            Alayon Stakeholders Attendance
-                                            Registry • Official Event Record
+                                            Pantawid Pamilyang Pilipino Program
+                                            • Official Event Record
                                         </span>
                                         <span>
                                             Printed:{' '}

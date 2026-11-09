@@ -270,7 +270,7 @@ export default function Welcome({ activeEvent, stats }: Props) {
                         <p className="mx-auto mt-4 max-w-3xl text-base font-medium text-emerald-800 italic sm:text-lg dark:text-emerald-300/90">
                             “
                             {activeEvent?.theme ||
-                                'Strengthening Collaborative Partnerships for Inclusive Community Resilience'}
+                                'Alayon connect: powering progress'}
                             ”
                         </p>
 
@@ -836,10 +836,7 @@ export default function Welcome({ activeEvent, stats }: Props) {
                         <p>© 2026 ALAYON Attendance. All rights reserved.</p>
                         <p className="flex items-center gap-1.5">
                             <ShieldCheck className="size-3.5 text-emerald-600" />
-                            <span>
-                                Strengthening Collaborative Partnerships for
-                                Inclusive Community Resilience
-                            </span>
+                            <span>Alayon connect: powering progress</span>
                         </p>
                     </div>
                 </div>
