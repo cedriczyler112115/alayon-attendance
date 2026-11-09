@@ -263,12 +263,18 @@ class AttendanceController extends Controller
                 ? array_filter(explode(',', $catInput))
                 : []);
 
-        $statusFilter = $request->input('status', 'registered');
+        $statusFilter = $request->input('status', 'registered,called');
 
         $query = Attendee::with(['event', 'category', 'province', 'city', 'barangay', 'creator'])
             ->when($event, fn ($q) => $q->where('event_id', $event->id))
             ->when(! empty($categoryIds), fn ($q) => $q->whereIn('category_id', $categoryIds))
-            ->when($statusFilter && $statusFilter !== 'all', fn ($q) => $q->where('status', $statusFilter))
+            ->when($statusFilter && $statusFilter !== 'all', function ($q) use ($statusFilter) {
+                $statuses = is_array($statusFilter) ? $statusFilter : explode(',', (string) $statusFilter);
+                $statuses = array_filter(array_map('trim', $statuses));
+                if (! empty($statuses)) {
+                    $q->whereIn('status', $statuses);
+                }
+            })
             ->when($request->input('attendance_mode') === 'without_rep' || $request->input('attendance_mode') === 'in_person', function ($q) {
                 $q->where('is_attending', true)->whereNull('rep_fullname');
             })

@@ -845,7 +845,7 @@ test('attendees print-data endpoint returns filtered data with in-person and rep
         'rep_position' => 'Chief of Staff',
     ]);
 
-    // 3. Attendee with invited status (should be EXCLUDED since print-data filters only status = registered)
+    // 3. Attendee with invited status (should be EXCLUDED since print-data filters only status = registered and called)
     $attendeeInvited = Attendee::create([
         'event_id' => $this->event->id,
         'category_id' => $this->pswdoCategory->id,
@@ -907,4 +907,57 @@ test('attendees print-data endpoint returns filtered data with in-person and rep
     $singleCategoryResponse->assertOk()
         ->assertJsonCount(1, 'attendees')
         ->assertJsonPath('attendees.0.fullname', 'Gov. Angel Amante');
+});
+
+test('attendees print-data endpoint displays both called and registered status attendees', function () {
+    $user = User::factory()->create(['role' => 'staff']);
+
+    Attendee::create([
+        'event_id' => $this->event->id,
+        'category_id' => $this->govCategory->id,
+        'fullname' => 'Registered Governor',
+        'position' => 'Provincial Governor',
+        'province_id' => $this->province->prov_code,
+        'status' => 'registered',
+        'registered_at' => now(),
+        'is_attending' => true,
+    ]);
+
+    Attendee::create([
+        'event_id' => $this->event->id,
+        'category_id' => $this->mayorCategory->id,
+        'fullname' => 'Called Mayor',
+        'position' => 'City Mayor',
+        'province_id' => $this->province->prov_code,
+        'city_id' => $this->city->city_code,
+        'status' => 'called',
+        'registered_at' => now(),
+        'is_attending' => true,
+    ]);
+
+    Attendee::create([
+        'event_id' => $this->event->id,
+        'category_id' => $this->pswdoCategory->id,
+        'fullname' => 'Invited PSWDO',
+        'position' => 'PSWDO Head',
+        'province_id' => $this->province->prov_code,
+        'status' => 'invited',
+        'is_attending' => true,
+    ]);
+
+    $response = $this->actingAs($user)->getJson(route('attendees.print-data', [
+        'event_id' => $this->event->id,
+    ]));
+
+    $response->assertOk()
+        ->assertJsonPath('summary.total', 2)
+        ->assertJsonPath('summary.called', 1)
+        ->assertJsonPath('summary.registered', 1)
+        ->assertJsonPath('summary.invited', 0)
+        ->assertJsonCount(2, 'attendees');
+
+    $names = collect($response->json('attendees'))->pluck('fullname')->all();
+    expect($names)->toContain('Registered Governor')
+        ->and($names)->toContain('Called Mayor')
+        ->and($names)->not->toContain('Invited PSWDO');
 });

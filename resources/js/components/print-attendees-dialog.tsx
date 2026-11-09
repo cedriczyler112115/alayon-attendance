@@ -10,6 +10,7 @@ import {
     Layers,
     MapPin,
     Maximize2,
+    Megaphone,
     Printer,
     RefreshCw,
     RotateCcw,
@@ -176,7 +177,7 @@ export function PrintAttendeesDialog({
     const [attendanceMode, setAttendanceMode] = useState<AttendanceFilterMode>(
         (initialFilters.attendance_mode as AttendanceFilterMode) || 'all',
     );
-    const status = 'registered';
+    const status = 'registered,called';
     const [provinceId, setProvinceId] = useState<string | number>(
         initialFilters.province_id || '',
     );
@@ -1315,10 +1316,17 @@ export function PrintAttendeesDialog({
                                 </Badge>
                                 <Badge
                                     variant="outline"
+                                    className="gap-1 border-blue-500/40 bg-blue-500/10 font-semibold text-blue-700 dark:text-blue-300"
+                                >
+                                    <Megaphone className="size-3 text-blue-600" />
+                                    <span>Called: {summary.called}</span>
+                                </Badge>
+                                <Badge
+                                    variant="outline"
                                     className="gap-1 border-emerald-500/40 bg-emerald-500/10 font-semibold text-emerald-700 dark:text-emerald-300"
                                 >
                                     <UserCheck className="size-3 text-emerald-600" />
-                                    <span>In Person: {summary.in_person}</span>
+                                    <span>Registered: {summary.registered}</span>
                                 </Badge>
                                 <Badge
                                     variant="outline"
@@ -1326,12 +1334,6 @@ export function PrintAttendeesDialog({
                                 >
                                     <Users className="size-3 text-amber-600" />
                                     <span>With Rep: {summary.represented}</span>
-                                </Badge>
-                                <Badge
-                                    variant="outline"
-                                    className="gap-1 border-emerald-500/40 bg-emerald-500/10 font-semibold text-emerald-700 dark:text-emerald-300"
-                                >
-                                    <span>Status: Registered Only</span>
                                 </Badge>
                             </div>
 
@@ -1497,7 +1499,7 @@ export function PrintAttendeesDialog({
                                                 •
                                             </span>
                                             <span className="text-neutral-600">
-                                                Status: Registered Guests Only
+                                                Status: Called & Registered Guests
                                             </span>
                                         </div>
                                         <div className="text-[10.5px] font-medium text-neutral-500">
@@ -1508,21 +1510,29 @@ export function PrintAttendeesDialog({
 
                                     {/* Optional Summary Statistics Box */}
                                     {showSummaryStats && (
-                                        <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                        <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                                             <div className="rounded border border-neutral-200 bg-neutral-50/70 p-2 text-center">
                                                 <div className="text-[10px] font-bold text-neutral-500 uppercase">
-                                                    Total Registered Guests
+                                                    Total Present
                                                 </div>
                                                 <div className="text-base font-extrabold text-neutral-900">
                                                     {summary.total}
                                                 </div>
                                             </div>
+                                            <div className="rounded border border-blue-200 bg-blue-50/50 p-2 text-center">
+                                                <div className="text-[10px] font-bold text-blue-700 uppercase">
+                                                    Called on Stage
+                                                </div>
+                                                <div className="text-base font-extrabold text-blue-800">
+                                                    {summary.called}
+                                                </div>
+                                            </div>
                                             <div className="rounded border border-emerald-200 bg-emerald-50/50 p-2 text-center">
                                                 <div className="text-[10px] font-bold text-emerald-700 uppercase">
-                                                    In Person (Without Rep)
+                                                    Registered
                                                 </div>
                                                 <div className="text-base font-extrabold text-emerald-800">
-                                                    {summary.in_person}
+                                                    {summary.registered}
                                                 </div>
                                             </div>
                                             <div className="rounded border border-amber-200 bg-amber-50/50 p-2 text-center">
