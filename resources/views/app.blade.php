@@ -2,7 +2,23 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        {{-- Viewport meta preventing mobile auto-zoom and supporting notch/fullscreen cover --}}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+
+        {{-- Mobile Fullscreen & Standalone App Capabilities (Hides browser toolbar) --}}
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="ALAYON 2026">
+        <meta name="apple-touch-fullscreen" content="yes">
+        <meta name="format-detection" content="telephone=no">
+
+        {{-- Dynamic Theme Colors for Mobile Status Bar & Browser Chrome --}}
+        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+        <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+
+        {{-- Web App Manifest for Standalone / Fullscreen Display --}}
+        <link rel="manifest" href="/manifest.json">
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
@@ -15,6 +31,17 @@
                     if (prefersDark) {
                         document.documentElement.classList.add('dark');
                     }
+                }
+
+                // Auto-collapse mobile browser address bar on initial load if supported
+                if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                    window.addEventListener('load', function() {
+                        setTimeout(function() {
+                            if (window.pageYOffset === 0) {
+                                window.scrollTo(0, 1);
+                            }
+                        }, 100);
+                    });
                 }
             })();
         </script>

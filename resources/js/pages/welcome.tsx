@@ -115,8 +115,8 @@ export default function Welcome({ activeEvent, stats }: Props) {
             <Head title="ALAYON 2026 - Dignitary Attendance, Protocol & Stage Announcer" />
 
             {/* Top Navigation Bar */}
-            <header className="sticky top-0 z-50 w-full border-b border-neutral-200/80 bg-white/80 backdrop-blur-md dark:border-neutral-800/80 dark:bg-neutral-900/80">
-                <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+            <header className="sticky top-0 z-50 w-full border-b border-neutral-200/80 bg-white/80 backdrop-blur-md dark:border-neutral-800/80 dark:bg-neutral-900/80 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] sm:pt-0">
+                <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                     {/* Brand / Emblem */}
                     <Link href="/" className="flex items-center gap-3 group">
                         <div className="flex size-10 items-center justify-center rounded-xl bg-linear-to-tr from-emerald-600 via-teal-600 to-indigo-600 text-white shadow-md shadow-emerald-500/20 transition-transform group-hover:scale-105">

@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import {
     ArrowLeft,
     Crown,
@@ -6,7 +7,9 @@ import {
     Landmark,
     LayoutGrid,
     LogOut,
+    Maximize2,
     Megaphone,
+    Minimize2,
     Palette,
     Settings,
     Shield,
@@ -151,6 +154,51 @@ export default function MenuPage() {
     const user = pageProps.auth?.user;
     const role: UserRole = user?.role || 'staff';
     const getInitials = useInitials();
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    useEffect(() => {
+        const handleFsChange = () => {
+            setIsFullscreen(!!(document.fullscreenElement || (document as unknown as { webkitFullscreenElement?: Element }).webkitFullscreenElement));
+        };
+        document.addEventListener('fullscreenchange', handleFsChange);
+        document.addEventListener('webkitfullscreenchange', handleFsChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFsChange);
+            document.removeEventListener('webkitfullscreenchange', handleFsChange);
+        };
+    }, []);
+
+    const toggleMobileFullscreen = () => {
+        const doc = document.documentElement as HTMLElement & {
+            webkitRequestFullscreen?: () => Promise<void>;
+            msRequestFullscreen?: () => Promise<void>;
+        };
+        const docWithExit = document as Document & {
+            webkitExitFullscreen?: () => Promise<void>;
+            msExitFullscreen?: () => Promise<void>;
+            webkitFullscreenElement?: Element;
+        };
+
+        if (!document.fullscreenElement && !docWithExit.webkitFullscreenElement) {
+            if (doc.requestFullscreen) {
+                doc.requestFullscreen().catch(() => {});
+            } else if (doc.webkitRequestFullscreen) {
+                doc.webkitRequestFullscreen();
+            } else if (doc.msRequestFullscreen) {
+                doc.msRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            } else if (docWithExit.webkitExitFullscreen) {
+                docWithExit.webkitExitFullscreen();
+            }
+        }
+
+        if (window.pageYOffset === 0) {
+            window.scrollTo(0, 1);
+        }
+    };
 
     const menuItems = allMenuItems.filter(
         (item) => !item.roles || item.roles.includes(role)
@@ -185,44 +233,60 @@ export default function MenuPage() {
             <Head title="Menu - ALAYON 2026" />
 
             {/* Mobile / Full-Page Header */}
-            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-neutral-200/80 bg-white/95 px-4 backdrop-blur-md dark:border-neutral-800/80 dark:bg-neutral-900/95 sm:px-6">
-                <div className="flex items-center gap-3">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        asChild
-                        className="size-9 rounded-xl text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
-                    >
-                        <Link href={dashboard()} prefetch title="Back to Home">
-                            <ArrowLeft className="size-5" />
-                        </Link>
-                    </Button>
-                    <div className="flex items-center gap-2.5">
-                        <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-                            <Landmark className="size-5" />
-                        </div>
-                        <div>
-                            <div className="text-xs font-black tracking-widest text-primary uppercase">
-                                ALAYON 2026
+            <header className="sticky top-0 z-30 flex flex-col justify-end shrink-0 border-b border-neutral-200/80 bg-white/95 backdrop-blur-md dark:border-neutral-800/80 dark:bg-neutral-900/95 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))]">
+                <div className="flex h-14 w-full items-center justify-between px-4 sm:px-6">
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            asChild
+                            className="size-9 rounded-xl text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                        >
+                            <Link href={dashboard()} prefetch title="Back to Home">
+                                <ArrowLeft className="size-5" />
+                            </Link>
+                        </Button>
+                        <div className="flex items-center gap-2.5">
+                            <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+                                <Landmark className="size-5" />
                             </div>
-                            <div className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
-                                Application Menu
+                            <div>
+                                <div className="text-xs font-black tracking-widest text-primary uppercase">
+                                    ALAYON 2026
+                                </div>
+                                <div className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
+                                    Application Menu
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <Button
-                    variant="outline"
-                    size="sm"
-                    asChild
-                    className="h-8 gap-1.5 rounded-lg border-neutral-200 px-3 text-xs font-semibold shadow-2xs dark:border-neutral-800"
-                >
-                    <Link href={dashboard()} prefetch>
-                        <Home className="size-3.5 text-primary" />
-                        <span>Home</span>
-                    </Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        type="button"
+                        onClick={toggleMobileFullscreen}
+                        className="size-8 rounded-lg border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400"
+                        title={isFullscreen ? 'Exit Fullscreen' : 'Hide Browser Toolbar (Fullscreen)'}
+                        aria-label={isFullscreen ? 'Exit Fullscreen' : 'Hide Browser Toolbar'}
+                    >
+                        {isFullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
+                    </Button>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="h-8 gap-1.5 rounded-lg border-neutral-200 px-3 text-xs font-semibold shadow-2xs dark:border-neutral-800"
+                    >
+                        <Link href={dashboard()} prefetch>
+                            <Home className="size-3.5 text-primary" />
+                            <span>Home</span>
+                        </Link>
+                    </Button>
+                </div>
+                </div>
             </header>
 
             {/* Main Content Area */}

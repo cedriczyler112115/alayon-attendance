@@ -137,9 +137,54 @@
         @apply border-border;
     }
 
+    html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
     body {
         @apply bg-background text-foreground;
+        min-height: 100vh;
+        min-height: 100dvh;
     }
+
+    /* Disable double-tap zoom on interactive elements on mobile */
+    input, select, textarea, button, a {
+        touch-action: manipulation;
+    }
+}
+
+/* Prevent automatic mobile input zooming in iOS Safari and Android browsers */
+@media (max-width: 768px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea,
+    [data-slot="input"],
+    [data-slot="select-trigger"],
+    [contenteditable="true"] {
+        font-size: 16px !important;
+    }
+
+    body {
+        min-height: 100dvh;
+        min-height: -webkit-fill-available;
+    }
+}
+
+/* Safe area insets for iPhone Dynamic Island, notch, status bar & home indicator */
+:root {
+    --sat: env(safe-area-inset-top, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+}
+
+.safe-area-pb {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+}
+
+.safe-area-pt {
+    padding-top: max(0.75rem, env(safe-area-inset-top, 0.75rem));
 }
 
 @media print {
