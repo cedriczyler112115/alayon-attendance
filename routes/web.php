@@ -63,6 +63,23 @@ Route::get('sw.js', function () {
     abort(404);
 })->name('pwa.sw');
 
+Route::get('workbox-{hash}.js', function ($hash) {
+    $swPath = public_path("workbox-{$hash}.js");
+    if (! file_exists($swPath)) {
+        $swPath = public_path("build/workbox-{$hash}.js");
+    }
+
+    if (file_exists($swPath)) {
+        return response()->file($swPath, [
+            'Content-Type' => 'application/javascript',
+            'Service-Worker-Allowed' => '/',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        ]);
+    }
+
+    abort(404);
+})->where('hash', '[a-zA-Z0-9_-]+')->name('pwa.workbox');
+
 Route::get('manifest.webmanifest', function () {
     $manifestPath = public_path('manifest.webmanifest');
     if (! file_exists($manifestPath)) {
@@ -78,6 +95,54 @@ Route::get('manifest.webmanifest', function () {
 
     abort(404);
 })->name('pwa.manifest');
+
+Route::get('manifest.json', function () {
+    $manifestPath = public_path('manifest.webmanifest');
+    if (! file_exists($manifestPath)) {
+        $manifestPath = public_path('manifest.json');
+    }
+    if (! file_exists($manifestPath)) {
+        $manifestPath = public_path('build/manifest.webmanifest');
+    }
+
+    if (file_exists($manifestPath)) {
+        return response()->file($manifestPath, [
+            'Content-Type' => 'application/manifest+json',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        ]);
+    }
+
+    abort(404);
+})->name('pwa.manifest.json');
+
+// Asset fallback route: transparently maps /assets/{path} to /build/assets/{path}
+Route::get('assets/{path}', function ($path) {
+    $filePath = public_path("build/assets/{$path}");
+    if (file_exists($filePath)) {
+        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mimeTypes = [
+            'js' => 'application/javascript',
+            'css' => 'text/css',
+            'woff' => 'font/woff',
+            'woff2' => 'font/woff2',
+            'svg' => 'image/svg+xml',
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'webp' => 'image/webp',
+            'ico' => 'image/x-icon',
+            'json' => 'application/json',
+        ];
+        $contentType = $mimeTypes[$extension] ?? 'application/octet-stream';
+
+        return response()->file($filePath, [
+            'Content-Type' => $contentType,
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+        ]);
+    }
+
+    abort(404);
+})->where('path', '.*')->name('pwa.assets.fallback');
 
 // Authenticated Host & Administration Routes
 Route::middleware(['auth'])->group(function () {

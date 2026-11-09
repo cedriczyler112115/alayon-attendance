@@ -20,6 +20,31 @@ test('pwa webmanifest file is accessible and contains required metadata', functi
         ->and(count($manifest['icons']))->toBeGreaterThanOrEqual(2);
 });
 
+test('pwa manifest json fallback route works', function () {
+    $response = $this->get('/manifest.json');
+
+    $response->assertStatus(200);
+    $response->assertHeader('Content-Type', 'application/manifest+json');
+});
+
+test('pwa workbox script route works', function () {
+    $response = $this->get('/workbox-3c86ea06.js');
+
+    $response->assertStatus(200);
+    $response->assertHeader('Content-Type', 'application/javascript');
+    $response->assertHeader('Service-Worker-Allowed', '/');
+});
+
+test('pwa assets fallback route serves built assets properly', function () {
+    $manifest = json_decode(File::get(public_path('build/manifest.json')), true);
+    $cssFile = basename($manifest['resources/css/app.css']['file'] ?? '');
+
+    if ($cssFile) {
+        $response = $this->get('/assets/' . $cssFile);
+        $response->assertStatus(200);
+    }
+});
+
 test('pwa service worker script is accessible and provides root scope authorization header', function () {
     $response = $this->get('/sw.js');
 

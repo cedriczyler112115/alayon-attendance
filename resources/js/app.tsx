@@ -45,22 +45,30 @@ void createInertiaApp({
 // This will set light / dark mode on load...
 initializeTheme();
 
-// Register Progressive Web App (PWA) Service Worker with automatic updates
+// Register Progressive Web App (PWA) Service Worker with automatic updates in secure contexts
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-    registerSW({
-        immediate: true,
-        onNeedRefresh() {
-            // Auto update new service worker cache and reload seamlessly
-            window.location.reload();
-        },
-        onOfflineReady() {
-            console.log('[PWA] ALAYON is ready for offline operation.');
-        },
-        onRegisterError(error) {
-            console.warn(
-                '[PWA] Service Worker registration encountered an issue:',
-                error,
-            );
-        },
-    });
+    const isSecure =
+        window.isSecureContext ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1';
+
+    if (isSecure) {
+        registerSW({
+            immediate: true,
+            onNeedRefresh() {
+                console.log(
+                    '[PWA] New version detected; ready for next navigation.',
+                );
+            },
+            onOfflineReady() {
+                console.log('[PWA] ALAYON is ready for offline operation.');
+            },
+            onRegisterError(error) {
+                console.warn(
+                    '[PWA] Service Worker registration encountered an issue:',
+                    error,
+                );
+            },
+        });
+    }
 }

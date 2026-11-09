@@ -31,6 +31,12 @@ function copyPwaFilesToRoot() {
                                 path.join(buildDir, file),
                                 path.join(publicDir, file),
                             );
+                            if (file === 'manifest.webmanifest') {
+                                fs.copyFileSync(
+                                    path.join(buildDir, file),
+                                    path.join(publicDir, 'manifest.json'),
+                                );
+                            }
                         }
                     }
                 }
@@ -112,12 +118,11 @@ export default defineConfig({
                         src: '/favicon.svg',
                         sizes: 'any',
                         type: 'image/svg+xml',
-                        purpose: 'any maskable',
                     },
                 ],
             },
             workbox: {
-                globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+                globPatterns: [],
                 navigateFallback: null,
                 cleanupOutdatedCaches: true,
                 runtimeCaching: [
@@ -142,6 +147,17 @@ export default defineConfig({
                             cacheName: 'images-cache',
                             expiration: {
                                 maxEntries: 50,
+                                maxAgeSeconds: 60 * 60 * 24 * 30,
+                            },
+                        },
+                    },
+                    {
+                        urlPattern: /\/build\/assets\/.*\.(?:js|css|woff2?)$/i,
+                        handler: 'StaleWhileRevalidate',
+                        options: {
+                            cacheName: 'assets-cache',
+                            expiration: {
+                                maxEntries: 100,
                                 maxAgeSeconds: 60 * 60 * 24 * 30,
                             },
                         },
